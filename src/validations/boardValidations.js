@@ -35,10 +35,10 @@ const createdNew = async (req, res, next) => {
     await correctCondition.validateAsync(req.body, {
       abortEarly: false
     })
-    // next()
-    res.status(StatusCodes.CREATED).json({
-      message: 'POST from Validation : API create new board'
-    })
+    next()
+    // res.status(StatusCodes.CREATED).json({
+    //   message: 'POST from Validation : API create new board'
+    // })
   } catch (error) {
     const errorMessage = new Error(error).message
     const customError = new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errorMessage)
