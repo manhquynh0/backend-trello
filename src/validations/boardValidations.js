@@ -1,6 +1,6 @@
 import Joi from 'joi'
 import StatusCodes from 'http-status-codes'
-
+import ApiError from '../untils/ApiError'
 const createdNew = async (req, res, next) => {
   const correctCondition = Joi.object({
     title: Joi.string()
@@ -40,9 +40,9 @@ const createdNew = async (req, res, next) => {
       message: 'POST from Validation : API create new board'
     })
   } catch (error) {
-    res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
-      errors: new Error(error).message
-    })
+    const errorMessage = new Error(error).message
+    const customError = new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errorMessage)
+    next(customError)
   }
 }
 export const boardValidations = {
