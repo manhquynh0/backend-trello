@@ -17,6 +17,9 @@ export const Connect_DB = async () => {
   await client.connect()
   db = client.db(dbName)
 }
+export const Close_DB = async () => {
+  await client.close()
+}
 export const GET_DB = () => {
   if (!db) throw new Error('Must connect to Database first!!!')
   return db
