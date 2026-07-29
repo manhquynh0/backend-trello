@@ -1,6 +1,11 @@
 import express from 'express'
 import StatusCodes from 'http-status-codes'
-import { boardValidations } from '~/validations/boardValidations'
+import {
+  boardValidations
+} from '~/validations/boardValidations'
+import {
+  boardController
+} from '~/controllers/boardController'
 const Router = express.Router()
 Router.route('/')
   .get((req, res) => {
@@ -9,6 +14,6 @@ Router.route('/')
     })
 
   })
-  .post(boardValidations.createdNew)
+  .post(boardValidations.createdNew, boardController.createdNew)
 
 export default Router

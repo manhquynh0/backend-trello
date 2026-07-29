@@ -32,7 +32,6 @@ const createdNew = async (req, res, next) => {
       })
   })
   try {
-    console.log('req.body', req.body)
     await correctCondition.validateAsync(req.body, {
       abortEarly: false
     })
@@ -41,7 +40,6 @@ const createdNew = async (req, res, next) => {
       message: 'POST from Validation : API create new board'
     })
   } catch (error) {
-    console.log(error)
     res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
       errors: new Error(error).message
     })
