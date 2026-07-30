@@ -1,13 +1,20 @@
 /* eslint-disable no-console */
 import express from 'express'
+import cors from 'cors'
+import {
+  corsOptions
+} from '~/config/cors'
 import {
   Connect_DB,
   GET_DB
 } from '~/config/database'
 import APIs_v1 from '~/routes/v1'
-import { errorHandlingMiddleware } from '~/middlewares/errorHandlingMiddleware'
+import {
+  errorHandlingMiddleware
+} from '~/middlewares/errorHandlingMiddleware'
 const START_SERVER = () => {
   const app = express()
+  app.use(cors(corsOptions))
   // cho phep gui du lieu dang json
   app.use(express.json())
   // route v1

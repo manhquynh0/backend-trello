@@ -15,5 +15,7 @@ Router.route('/')
 
   })
   .post(boardValidations.createdNew, boardController.createdNew)
+Router.route('/:id')
+  .get(boardController.getDetails)
 
 export default Router

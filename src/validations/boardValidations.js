@@ -1,6 +1,6 @@
 import Joi from 'joi'
 import StatusCodes from 'http-status-codes'
-import ApiError from '../untils/ApiError'
+import ApiError from '../utils/ApiError'
 const createdNew = async (req, res, next) => {
   const correctCondition = Joi.object({
     title: Joi.string()
