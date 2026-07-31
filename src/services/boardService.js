@@ -7,6 +7,9 @@ import {
   boardModel,
   findOneById
 } from '~/models/boardModel'
+import {
+  cloneDeep
+} from 'lodash'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -29,11 +32,22 @@ const getDetails = async (boardId) => {
     if (!board) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Board Not Found')
     }
-    return board
+
+
+    const resBoard = cloneDeep(board) // clone board
+    resBoard.columns.forEach(column => {
+      column.cards = resBoard.cards.filter(card => {
+        return card.columnId.equals(column._id)
+      })
+    })
+    delete resBoard.cards
+    return resBoard
+
   } catch (error) {
     throw error
   }
 }
+
 export const boardService = {
   createNew,
   getDetails

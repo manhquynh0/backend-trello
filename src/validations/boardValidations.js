@@ -1,6 +1,9 @@
 import Joi from 'joi'
 import StatusCodes from 'http-status-codes'
 import ApiError from '../utils/ApiError'
+import {
+  BOARD_TYPES
+} from '~/utils/constants'
 const createdNew = async (req, res, next) => {
   const correctCondition = Joi.object({
     title: Joi.string()
@@ -29,7 +32,8 @@ const createdNew = async (req, res, next) => {
         'string.min': 'Mô tả phải có ít nhất 3 ký tự.',
         'string.max': 'Mô tả không được vượt quá 256 ký tự.',
         'any.required': 'Mô tả là bắt buộc.'
-      })
+      }),
+    type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE).required()
   })
   try {
     await correctCondition.validateAsync(req.body, {
