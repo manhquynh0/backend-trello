@@ -3,7 +3,8 @@ import {
   GET_DB
 } from '~/config/database'
 import {
-  ObjectId
+  ObjectId,
+  ReturnDocument
 } from 'mongodb'
 import {
   cardModel
@@ -68,8 +69,7 @@ const findOneById = async (id) => {
 }
 const getDetails = async (id) => {
   try {
-    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([
-      {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([{
         $match: {
           _id: new ObjectId(id),
           _destroy: false
@@ -98,10 +98,27 @@ const getDetails = async (id) => {
 
   }
 }
+const pushColumnOrderIds = async (column) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate({
+      _id: new ObjectId(column.boardId)
+    }, {
+      $push: {
+        columnOrderIds: new ObjectId(column._id)
+      }
+    }, {
+      ReturnDocument: 'after'
+    })
+    return result.value || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
   createNew,
   findOneById,
-  getDetails
+  getDetails,
+  pushColumnOrderIds
 }

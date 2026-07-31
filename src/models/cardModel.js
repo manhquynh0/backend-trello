@@ -1,5 +1,8 @@
 import Joi from 'joi'
-import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
+import {
+  OBJECT_ID_RULE,
+  OBJECT_ID_RULE_MESSAGE
+} from '~/utils/validators'
 import {
   ObjectId
 } from 'mongodb'
@@ -27,7 +30,12 @@ const validateBeforeCreate = async (data) => {
 const createNew = async (data) => {
   try {
     const validatedData = await validateBeforeCreate(data)
-    const createdcard = await GET_DB().collection(CARD_COLLECTION_NAME).insertOne(validatedData)
+    const newAddCard = {
+      ...validatedData,
+      columnId: new ObjectId(validatedData.columnId),
+      boardId: new ObjectId(validatedData.boardId)
+    }
+    const createdcard = await GET_DB().collection(CARD_COLLECTION_NAME).insertOne(newAddCard)
     return createdcard
   } catch (error) {
     throw new Error(error)

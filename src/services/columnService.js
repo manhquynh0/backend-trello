@@ -8,8 +8,12 @@ import {
   findOneById
 } from '~/models/columnModel'
 import {
+  boardModel
+} from '../models/boardModel'
+import {
   cloneDeep
 } from 'lodash'
+import { pushColumnOrderIds} from '../models/boardModel'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -19,7 +23,10 @@ const createNew = async (reqBody) => {
     const createdcolumn = await columnModel.createNew(newcolumn)
 
     const getNewcolumn = await columnModel.findOneById(createdcolumn.insertedId)
-    return getNewcolumn
+    if (getNewcolumn) {
+      getNewcolumn.cards = []
+      await boardModel.pushColumnOrderIds(getNewcolumn)
+    }
   } catch (error) {
     throw error
   }

@@ -10,6 +10,9 @@ import {
 import {
   cloneDeep
 } from 'lodash'
+import {
+  columnModel
+} from '../models/columnModel'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -19,7 +22,9 @@ const createNew = async (reqBody) => {
     const createdcard = await cardModel.createNew(newcard)
 
     const getNewcard = await cardModel.findOneById(createdcard.insertedId)
-    return getNewcard
+    if (getNewcard) {
+      await columnModel.pushCardOrderIds(getNewcard)
+    }
   } catch (error) {
     throw error
   }
