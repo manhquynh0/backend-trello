@@ -51,8 +51,23 @@ const getDetails = async (columnId) => {
     throw error
   }
 }
+const updatedColumn = async (columnId, reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const updateData = {
+      ...reqBody,
+      updatedAt: Date.now()
+
+    }
+    const updatedColumn = await columnModel.updatedColumn(columnId, updateData)
+    return updatedColumn
+  } catch (error) {
+    throw error
+  }
+}
 
 export const columnService = {
   createNew,
-  getDetails
+  getDetails,
+  updatedColumn
 }

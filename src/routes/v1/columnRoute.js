@@ -8,5 +8,8 @@ import {
 const Router = express.Router()
 Router.route('/')
   .post(columnValidations.createdNew, columnController.createdNew)
+Router.route('/:id')
+  .put(columnValidations.updatedColumn, columnController.updatedColumn)
+
 
 export default Router

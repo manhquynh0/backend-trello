@@ -19,4 +19,5 @@ Router.route('/:id')
   .get(boardController.getDetails)
   .put(boardValidations.updateBoard, boardController.updateBoard)
 
+
 export default Router

@@ -25,7 +25,17 @@ const getDetails = async (req, res, next) => {
     // })
   }
 }
+const updatedColumn = async (req, res, next) => {
+  try {
+    const columnId = req.params.id
+    const updatedColumn = await columnService.updatedColumn(columnId, req.body)
+    res.status(StatusCodes.OK).json(updatedColumn)
+  } catch (error) {
+    next(error)
+  }
+}
 export const columnController = {
   createdNew,
-  getDetails
+  getDetails,
+  updatedColumn
 }

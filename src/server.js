@@ -5,8 +5,7 @@ import {
   corsOptions
 } from '~/config/cors'
 import {
-  Connect_DB,
-  GET_DB
+  Connect_DB
 } from '~/config/database'
 import APIs_v1 from '~/routes/v1'
 import {
@@ -21,11 +20,6 @@ const START_SERVER = () => {
   app.use('/v1', APIs_v1)
 
   app.use(errorHandlingMiddleware)
-
-  app.get('/', async (req, res) => {
-    console.log(await GET_DB().listCollections().toArray())
-    res.send('Hello World')
-  })
 
   app.listen(3000, () => {
     console.log('Server is running on http://localhost:3000')

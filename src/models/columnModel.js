@@ -1,5 +1,8 @@
 import Joi from 'joi'
-import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
+import {
+  OBJECT_ID_RULE,
+  OBJECT_ID_RULE_MESSAGE
+} from '~/utils/validators'
 import {
   ObjectId
 } from 'mongodb'
@@ -7,6 +10,7 @@ import {
   GET_DB
 } from '~/config/database'
 // Define Collection (name & schema)
+const INVALID_UPDATE_FIELDS = ['_id', 'boardId', 'createdAt']
 const COLUMN_COLLECTION_NAME = 'columns'
 const COLUMN_COLLECTION_SCHEMA = Joi.object({
   boardId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
@@ -31,7 +35,7 @@ const createNew = async (data) => {
     const validatedData = await validateBeforeCreate(data)
     const newAddColumn = {
       ...validatedData,
-      boardId : new ObjectId(validatedData.boardId)
+      boardId: new ObjectId(validatedData.boardId)
     }
     const createdColumn = await GET_DB().collection(COLUMN_COLLECTION_NAME).insertOne(newAddColumn)
     return createdColumn
@@ -66,10 +70,32 @@ const pushCardOrderIds = async (card) => {
     throw new Error(error)
   }
 }
+const updatedColumn = async (columnId, updateData) => {
+  try {
+    Object.keys(updateData).forEach(field => {
+      if (INVALID_UPDATE_FIELDS.includes(field)) {
+        delete updateData[field]
+      }
+    })
+    console.log(updateData)
+    const result = await GET_DB().collection(COLUMN_COLLECTION_NAME).findOneAndUpdate({
+      _id: new ObjectId(columnId)
+    }, {
+      $set: updateData
+
+    }, {
+      returnDocument: 'after'
+    })
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 export const columnModel = {
   createNew,
   findOneById,
   pushCardOrderIds,
+  updatedColumn,
   COLUMN_COLLECTION_NAME,
   COLUMN_COLLECTION_SCHEMA
 }

@@ -69,7 +69,8 @@ const findOneById = async (id) => {
 }
 const getDetails = async (id) => {
   try {
-    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([{
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([
+      {
         $match: {
           _id: new ObjectId(id),
           _destroy: false
