@@ -25,6 +25,7 @@ const createNew = async (reqBody) => {
     if (getNewcard) {
       await columnModel.pushCardOrderIds(getNewcard)
     }
+    return getNewcard
   } catch (error) {
     throw error
   }

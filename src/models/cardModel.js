@@ -52,38 +52,6 @@ const findOneById = async (id) => {
     throw new Error(error)
   }
 }
-// const getDetails = async (id) => {
-//   try {
-//     const result = await GET_DB().collection(card_COLLECTION_NAME).aggregate([
-//       {
-//         $match: {
-//           _id: new ObjectId(id),
-//           _destroy: false
-//         }
-//       },
-//       {
-//         $lookup: {
-//           from: cardModel.CARD_COLLECTION_NAME,
-//           localField: '_id',
-//           foreignField: 'cardId',
-//           as: 'columns' // tự động sinh ra
-//         }
-//       },
-//       {
-//         $lookup: {
-//           from: cardModel.CARD_COLLECTION_NAME,
-//           localField: '_id',
-//           foreignField: 'cardId',
-//           as: 'cards'
-//         }
-//       }
-//     ]).toArray()
-//     return result[0] || {}
-//   } catch (error) {
-//     throw new Error(error)
-
-//   }
-// }
 export const cardModel = {
   createNew,
   findOneById,

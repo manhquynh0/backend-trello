@@ -4,8 +4,7 @@ import {
 import ApiError from '../utils/ApiError'
 import slugify from '../utils/formatter'
 import {
-  boardModel,
-  findOneById
+  boardModel
 } from '~/models/boardModel'
 import {
   cloneDeep
@@ -47,8 +46,22 @@ const getDetails = async (boardId) => {
     throw error
   }
 }
+const updateBoard = async (boardId, reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const updateData = {
+      ...reqBody,
+      updatedAt: Date.now()
+    }
+    const updateBoard = await boardModel.updateBoard(boardId, updateData)
 
+    return updateBoard
+  } catch (error) {
+    throw error
+  }
+}
 export const boardService = {
   createNew,
-  getDetails
+  getDetails,
+  updateBoard
 }

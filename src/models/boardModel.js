@@ -3,8 +3,7 @@ import {
   GET_DB
 } from '~/config/database'
 import {
-  ObjectId,
-  ReturnDocument
+  ObjectId
 } from 'mongodb'
 import {
   cardModel
@@ -15,6 +14,7 @@ import {
 import {
   BOARD_TYPES
 } from '~/utils/constants'
+const INVALID_UPDATE_FIELDS = ['_id', 'createdAt']
 const BOARD_COLLECTION_NAME = 'boards'
 const BOARD_COLLECTION_SCHEMA = Joi.object({
   title: Joi.string()
@@ -109,7 +109,27 @@ const pushColumnOrderIds = async (column) => {
     }, {
       ReturnDocument: 'after'
     })
-    return result.value || null
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+const updateBoard = async (boardId, updateData) => {
+  try {
+    Object.keys(updateData).forEach(fieldName => {
+      if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
+        delete updateData[fieldName]
+      }
+    })
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate({
+      _id: new ObjectId(boardId)
+    }, {
+      $set: updateData
+
+    }, {
+      ReturnDocument: 'after'
+    })
+    return result || null
   } catch (error) {
     throw new Error(error)
   }
@@ -120,5 +140,6 @@ export const boardModel = {
   createNew,
   findOneById,
   getDetails,
-  pushColumnOrderIds
+  pushColumnOrderIds,
+  updateBoard
 }

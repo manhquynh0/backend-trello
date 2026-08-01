@@ -2,10 +2,8 @@ import {
   StatusCodes
 } from 'http-status-codes'
 import ApiError from '../utils/ApiError'
-import slugify from '../utils/formatter'
 import {
-  columnModel,
-  findOneById
+  columnModel
 } from '~/models/columnModel'
 import {
   boardModel
@@ -13,7 +11,6 @@ import {
 import {
   cloneDeep
 } from 'lodash'
-import { pushColumnOrderIds} from '../models/boardModel'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -27,6 +24,7 @@ const createNew = async (reqBody) => {
       getNewcolumn.cards = []
       await boardModel.pushColumnOrderIds(getNewcolumn)
     }
+    return getNewcolumn
   } catch (error) {
     throw error
   }
