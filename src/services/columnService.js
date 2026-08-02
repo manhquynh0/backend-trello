@@ -65,9 +65,21 @@ const updatedColumn = async (columnId, reqBody) => {
     throw error
   }
 }
+const deletedColumn = async (columnId) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const deletedColumn = await columnModel.updatedColumn(columnId, {
+      _destroy : true
+    })
+    return deletedColumn
+  } catch (error) {
+    throw error
+  }
+}
 
 export const columnService = {
   createNew,
   getDetails,
-  updatedColumn
+  updatedColumn,
+  deletedColumn
 }

@@ -69,7 +69,8 @@ const findOneById = async (id) => {
 }
 const getDetails = async (id) => {
   try {
-    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([{
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([
+      {
         $match: {
           _id: new ObjectId(id),
           _destroy: false
@@ -92,7 +93,10 @@ const getDetails = async (id) => {
         }
       }
     ]).toArray()
-    return result[0] || {}
+    const board = result[0] || {}
+    board.columns = board.columns.filter(column => !column._destroy)
+
+    return board
   } catch (error) {
     throw new Error(error)
 
