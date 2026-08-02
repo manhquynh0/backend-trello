@@ -4,6 +4,10 @@ import ApiError from '../utils/ApiError'
 import {
   BOARD_TYPES
 } from '~/utils/constants'
+import {
+  OBJECT_ID_RULE,
+  OBJECT_ID_RULE_MESSAGE
+} from '~/utils/validators'
 const createdNew = async (req, res, next) => {
   const correctCondition = Joi.object({
     title: Joi.string()
@@ -81,7 +85,31 @@ const updateBoard = async (req, res, next) => {
   try {
     await correctCondition.validateAsync(req.body, {
       abortEarly: false,
-      allowUnknown : true
+      allowUnknown: true
+    })
+    next()
+
+  } catch (error) {
+    const errorMessage = new Error(error).message
+    const customError = new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errorMessage)
+    next(customError)
+  }
+}
+const movingCard = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    prevColumnId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    nextColumnId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    currentCardId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    prevCardOrderIds: Joi.array().items(
+      Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+    ).default([]),
+    nextCardOrderIds: Joi.array().items(
+      Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+    ).default([])
+  })
+  try {
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false
     })
     next()
 
@@ -93,5 +121,6 @@ const updateBoard = async (req, res, next) => {
 }
 export const boardValidations = {
   createdNew,
-  updateBoard
+  updateBoard,
+  movingCard
 }

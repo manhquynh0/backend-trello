@@ -12,9 +12,11 @@ Router.route('/')
     res.status(StatusCodes.OK).json({
       message: 'NOTE : API got listboard'
     })
-
   })
+
   .post(boardValidations.createdNew, boardController.createdNew)
+Router.route('/supports/moving_cards')
+  .put(boardValidations.movingCard, boardController.movingCard)
 Router.route('/:id')
   .get(boardController.getDetails)
   .put(boardValidations.updateBoard, boardController.updateBoard)

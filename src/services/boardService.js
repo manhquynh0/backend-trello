@@ -7,6 +7,12 @@ import {
   boardModel
 } from '~/models/boardModel'
 import {
+  cardModel
+} from '~/models/cardModel'
+import {
+  columnModel
+} from '~/models/columnModel'
+import {
   cloneDeep
 } from 'lodash'
 const createNew = async (reqBody) => {
@@ -60,8 +66,37 @@ const updateBoard = async (boardId, reqBody) => {
     throw error
   }
 }
+const movingCard = async (reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const {
+      currentCardId,
+      prevColumnId,
+      prevCardOrderIds,
+      nextColumnId,
+      nextCardOrderIds
+    } = reqBody
+    await columnModel.updatedColumn(prevColumnId, {
+      cardOrderIds: prevCardOrderIds
+    })
+
+    await columnModel.updatedColumn(nextColumnId, {
+      cardOrderIds: nextCardOrderIds
+    })
+
+    await cardModel.updatedCard(currentCardId, {
+      columnId: nextColumnId
+    })
+    return {
+      updateResult: 'Successfully'
+    }
+  } catch (error) {
+    throw error
+  }
+}
 export const boardService = {
   createNew,
   getDetails,
-  updateBoard
+  updateBoard,
+  movingCard
 }

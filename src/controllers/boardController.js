@@ -20,9 +20,6 @@ const getDetails = async (req, res, next) => {
     res.status(StatusCodes.OK).json(board)
   } catch (error) {
     next(error)
-    // res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-    //   errors: error.message
-    // })
   }
 }
 const updateBoard = async (req, res, next) => {
@@ -34,8 +31,17 @@ const updateBoard = async (req, res, next) => {
     next(error)
   }
 }
+const movingCard = async (req, res, next) => {
+  try {
+    const updateBoard = await boardService.movingCard(req.body)
+    res.status(StatusCodes.OK).json(updateBoard)
+  } catch (error) {
+    next(error)
+  }
+}
 export const boardController = {
   createdNew,
   getDetails,
-  updateBoard
+  updateBoard,
+  movingCard
 }

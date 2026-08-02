@@ -69,8 +69,7 @@ const findOneById = async (id) => {
 }
 const getDetails = async (id) => {
   try {
-    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([
-      {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([{
         $match: {
           _id: new ObjectId(id),
           _destroy: false
@@ -122,13 +121,18 @@ const updateBoard = async (boardId, updateData) => {
         delete updateData[fieldName]
       }
     })
+    if (updateData.columnOrderIds) {
+      updateData.columnOrderIds = updateData.columnOrderIds.map(_id =>
+        (new ObjectId(_id))
+      )
+    }
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate({
       _id: new ObjectId(boardId)
     }, {
       $set: updateData
 
     }, {
-      ReturnDocument: 'after'
+      returnDocument: 'after'
     })
     return result || null
   } catch (error) {

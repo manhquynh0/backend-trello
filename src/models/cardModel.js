@@ -11,6 +11,7 @@ import {
 } from '~/config/database'
 // Define Collection (name & schema)
 const CARD_COLLECTION_NAME = 'cards'
+const INVALID_UPDATE_FIELDS = ['_id', 'boardId', 'createdAt']
 const CARD_COLLECTION_SCHEMA = Joi.object({
   boardId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
   columnId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
@@ -52,9 +53,31 @@ const findOneById = async (id) => {
     throw new Error(error)
   }
 }
+const updatedCard = async (cardId, updateData) => {
+  try {
+    Object.keys(updateData).forEach(fieldName => {
+      if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
+        delete updateData[fieldName]
+      }
+    })
+    if (updateData.columnId) updateData.columnId = new ObjectId(updateData.columnId)
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate({
+      _id: new ObjectId(cardId)
+    }, {
+      $set: updateData
+
+    }, {
+      returnDocument: 'after'
+    })
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 export const cardModel = {
   createNew,
   findOneById,
   CARD_COLLECTION_NAME,
-  CARD_COLLECTION_SCHEMA
+  CARD_COLLECTION_SCHEMA,
+  updatedCard
 }
