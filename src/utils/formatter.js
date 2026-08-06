@@ -1,5 +1,5 @@
 import {
-  omit
+  pick
 } from 'lodash'
 export const slugify = (val) => {
   if (!val) return ''
@@ -14,5 +14,5 @@ export const slugify = (val) => {
 }
 export const pickUser = (user) => {
   if (!user) return
-  return omit(user, ['password', 'verifyToken'])
+  return pick(user, ['email', 'userName', 'displayName', 'role', 'avatar'])
 }

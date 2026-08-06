@@ -12,6 +12,12 @@ import {
 import {
   pickUser
 } from '~/utils/formatter'
+import {
+  WEBSITE_DOMAIN
+} from '~/utils/constants'
+import {
+  BrevoProvider
+} from '~/providers/BrevoProvider'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -29,6 +35,13 @@ const createNew = async (reqBody) => {
     }
     const createdUser = await userModel.createNew(newUser)
     const getNewUser = await userModel.findOneById(createdUser.insertedId)
+    const verificationLink = `${WEBSITE_DOMAIN}/account/verification?email=${getNewUser.email}&token=${getNewUser.verifyToken}`
+    const customSubject = 'ManhQuynhDev'
+    const html = `
+    <h1>ManhQuynhDev</h1>
+    <h3>${verificationLink}</h3>`
+    await BrevoProvider.sendEmail(getNewUser, customSubject, html)
+    console.log(getNewUser.email)
     return pickUser(getNewUser)
   } catch (error) {
     throw error
