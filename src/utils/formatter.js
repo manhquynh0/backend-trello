@@ -1,4 +1,7 @@
-const slugify = (val) => {
+import {
+  omit
+} from 'lodash'
+export const slugify = (val) => {
   if (!val) return ''
   return String(val)
     .normalize('NFKD') // split accented characters into their base characters and diacritical marks
@@ -9,4 +12,7 @@ const slugify = (val) => {
     .replace(/\s+/g, '-') // replace spaces with hyphens
     .replace(/-+/g, '-') // remove consecutive hyphens
 }
-export default slugify
+export const pickUser = (user) => {
+  if (!user) return
+  return omit(user, ['password', 'verifyToken'])
+}
