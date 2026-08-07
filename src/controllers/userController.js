@@ -9,8 +9,25 @@ const createNew = async (req, res, next) => {
   } catch (error) {
     next(error)
   }
-
+}
+const verify = async (req, res, next) => {
+  try {
+    const verifyAccount = await userService.verify(req.body)
+    res.status(StatusCodes.OK).json(verifyAccount)
+  } catch (error) {
+    next(error)
+  }
+}
+const login = async (req, res, next) => {
+  try {
+    const loginAccount = await userService.login(req.body)
+    res.status(StatusCodes.OK).json(loginAccount)
+  } catch (error) {
+    next(error)
+  }
 }
 export const userController = {
-  createNew
+  createNew,
+  verify,
+  login
 }

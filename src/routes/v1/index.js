@@ -13,5 +13,5 @@ Router.get('/status', (req, res) => {
 Router.use('/boards', boardRoute)
 Router.use('/cards', cardRoute)
 Router.use('/columns', columnRoute)
-Router.use('/user', userRoute)
+Router.use('/users', userRoute)
 export default Router

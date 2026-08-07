@@ -10,7 +10,7 @@ import {
 const createNew = async (req, res, next) => {
   const correctCondition = Joi.object({
     email: Joi.string().required().pattern(EMAIL_RULE).message(EMAIL_RULE_MESSAGE),
-    password: Joi.string().required().pattern(PASSWORD_RULE).message(PASSWORD_RULE_MESSAGE),
+    password: Joi.string().trim().required().pattern(PASSWORD_RULE).message(PASSWORD_RULE_MESSAGE),
     avatar: Joi.string().default([]),
     isActive: Joi.boolean().default(false),
     createdAt: Joi.date().timestamp('javascript').default(Date.now),
@@ -29,7 +29,42 @@ const createNew = async (req, res, next) => {
     next(customError)
   }
 }
+const verify = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    email: Joi.string().required().pattern(EMAIL_RULE).message(EMAIL_RULE_MESSAGE),
+    token: Joi.string().required()
+  })
+  try {
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false
+    })
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message
+    const customError = new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errorMessage)
+    next(customError)
+  }
 
+}
+const login = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    email: Joi.string().required().pattern(EMAIL_RULE).message(EMAIL_RULE_MESSAGE),
+    password: Joi.string().required().pattern(PASSWORD_RULE).message(PASSWORD_RULE_MESSAGE)
+  })
+  try {
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false
+    })
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message
+    const customError = new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errorMessage)
+    next(customError)
+  }
+
+}
 export const userValidation = {
-  createNew
+  createNew,
+  verify,
+  login
 }

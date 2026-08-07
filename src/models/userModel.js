@@ -17,7 +17,7 @@ const INVALID_UPDATE_FIELDS = ['_id', 'email', 'userName', 'createdAt']
 const USER_COLLECTION_NAME = 'users'
 const USER_COLLECTION_SCHEMA = Joi.object({
   email: Joi.string().required().pattern(EMAIL_RULE).message(EMAIL_RULE_MESSAGE),
-  password: Joi.string().required().pattern(PASSWORD_RULE).message(PASSWORD_RULE_MESSAGE),
+  password: Joi.string().trim().required().pattern(PASSWORD_RULE).message(PASSWORD_RULE_MESSAGE),
   avatar: Joi.string().default([]),
   userName: Joi.string().required().trim().strict(),
   displayName: Joi.string().required().trim().strict(),
@@ -37,10 +37,10 @@ const validateBeforeCreate = async (data) => {
 const createNew = async (data) => {
   try {
     const validatedData = await validateBeforeCreate(data)
-    const newAddColumn = {
+    const newAccount = {
       ...validatedData
     }
-    const createdColumn = await GET_DB().collection(USER_COLLECTION_NAME).insertOne(newAddColumn)
+    const createdColumn = await GET_DB().collection(USER_COLLECTION_NAME).insertOne(newAccount)
     return createdColumn
   } catch (error) {
     throw new Error(error)

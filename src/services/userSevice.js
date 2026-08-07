@@ -18,12 +18,16 @@ import {
 import {
   BrevoProvider
 } from '~/providers/BrevoProvider'
+import {
+  JwtProvider
+} from '~/providers/JwtProvider'
+require('dotenv').config()
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
     const exitUser = await userModel.findOneByEmail(reqBody.email)
     if (exitUser) {
-      throw new ApiError(StatusCodes.CONFLICT, 'Email already exists !')
+      throw new ApiError(StatusCodes.CONFLICT, 'Email đã tồn tại !')
     }
     const nameFromEmail = reqBody.email.split('@')[0]
     const newUser = {
@@ -38,15 +42,81 @@ const createNew = async (reqBody) => {
     const verificationLink = `${WEBSITE_DOMAIN}/account/verification?email=${getNewUser.email}&token=${getNewUser.verifyToken}`
     const customSubject = 'ManhQuynhDev'
     const html = `
-    <h1>ManhQuynhDev</h1>
+    Hello ${getNewUser.userName},
+
+Thank you for creating your QLLO account.
+
+Please click the button below to verify your email address.
+
+This link will expire in 30 minutes.
+
+Best regards,
+ManhQuynhDev 
     <h3>${verificationLink}</h3>`
     await BrevoProvider.sendEmail(getNewUser, customSubject, html)
-    console.log(getNewUser.email)
     return pickUser(getNewUser)
   } catch (error) {
     throw error
   }
 }
+const verify = async (reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const exitUser = await userModel.findOneByEmail(reqBody.email)
+    if (!exitUser) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Không tìm thấy tài khoản!')
+    }
+    if (exitUser.isActive) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTED, 'Tài khoản đã đươc kích hoạt !')
+    }
+    if (exitUser.verifyToken !== reqBody.token) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTED, 'Token không hợp lệ!')
+    }
+    const updateData = {
+      isActive: true,
+      verifyToken: null
+    }
+    return pickUser(updateData)
+  } catch (error) {
+    throw error
+  }
+}
+const login = async (reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const exitUser = await userModel.findOneByEmail(reqBody.email)
+    if (!exitUser) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Không tìm thấy tài khoản!')
+    }
+    if (!exitUser.isActive) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTED, 'Tài khoản chưa được kích hoạt')
+    }
+    if (!(await bcryptjs.compare(reqBody.password, exitUser.password))) {
+      throw new ApiError(
+        StatusCodes.NOT_ACCEPTABLE,
+        'Email hoặc mật khẩu không đúng!'
+      )
+    }
+    const userInfor = {
+      email: exitUser.email,
+      _id: exitUser._id
+    }
+    const accessToken = await JwtProvider.generateToken(userInfor, process.env.ACCESS_SECRET_SIGNATURE, process.env.ACCESS_TOKEN_LIFE)
+    const refreshToken = await JwtProvider.generateToken(userInfor, process.env.REFRESH_SECRET_SIGNATURE, process.env.REFRESH_TOKEN_LIFE)
+
+    return {
+      accessToken,
+      refreshToken,
+      ...pickUser(exitUser)
+    }
+
+  } catch (error) {
+    throw error
+  }
+}
+
 export const userService = {
-  createNew
+  createNew,
+  verify,
+  login
 }
