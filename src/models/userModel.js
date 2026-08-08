@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-catch */
 import Joi from 'joi'
 import {
   EMAIL_RULE,
@@ -43,7 +44,7 @@ const createNew = async (data) => {
     const createdColumn = await GET_DB().collection(USER_COLLECTION_NAME).insertOne(newAccount)
     return createdColumn
   } catch (error) {
-    throw new Error(error)
+    throw error
 
   }
 }
@@ -54,7 +55,7 @@ const findOneById = async (userId) => {
     })
     return result
   } catch (error) {
-    throw new Error(error)
+    throw error
   }
 }
 const findOneByEmail = async (userEmail) => {
@@ -64,7 +65,7 @@ const findOneByEmail = async (userEmail) => {
     })
     return result
   } catch (error) {
-    throw new Error(error)
+    throw error
   }
 }
 const update = async (userId, updateData) => {
@@ -83,7 +84,7 @@ const update = async (userId, updateData) => {
     })
     return result
   } catch (error) {
-    throw new Error(error)
+    throw error
   }
 
 }

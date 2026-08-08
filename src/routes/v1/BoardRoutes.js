@@ -6,20 +6,22 @@ import {
 import {
   boardController
 } from '~/controllers/boardController'
+import {
+  authMiddleware
+} from '~/middlewares/authMiddleware'
 const Router = express.Router()
 Router.route('/')
-  .get((req, res) => {
+  .get(authMiddleware.isAuthorized, (req, res) => {
     res.status(StatusCodes.OK).json({
       message: 'NOTE : API got listboard'
     })
   })
-
-  .post(boardValidations.createdNew, boardController.createdNew)
+  .post(authMiddleware.isAuthorized, boardValidations.createdNew, boardController.createdNew)
 Router.route('/supports/moving_cards')
-  .put(boardValidations.movingCard, boardController.movingCard)
+  .put(authMiddleware.isAuthorized, boardValidations.movingCard, boardController.movingCard)
 Router.route('/:id')
-  .get(boardController.getDetails)
-  .put(boardValidations.updateBoard, boardController.updateBoard)
+  .get(authMiddleware.isAuthorized, boardController.getDetails)
+  .put(authMiddleware.isAuthorized, boardValidations.updateBoard, boardController.updateBoard)
 
 
 export default Router

@@ -11,9 +11,16 @@ import APIs_v1 from '~/routes/v1'
 import {
   errorHandlingMiddleware
 } from '~/middlewares/errorHandlingMiddleware'
+import cookie from 'cookie-parser'
 const START_SERVER = () => {
   const app = express()
   app.use(cors(corsOptions))
+  app.use(cookie())
+  // fix cache from disk
+  app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store')
+    next()
+  })
   // cho phep gui du lieu dang json
   app.use(express.json())
   // route v1

@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-catch */
 import {
   StatusCodes
 } from 'http-status-codes'
@@ -67,7 +68,7 @@ const verify = async (reqBody) => {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Không tìm thấy tài khoản!')
     }
     if (exitUser.isActive) {
-      throw new ApiError(StatusCodes.NOT_ACCEPTED, 'Tài khoản đã đươc kích hoạt !')
+      throw new ApiError(StatusCodes.NOT_ACCEPTED, 'Tài khoản đã được kích hoạt !')
     }
     if (exitUser.verifyToken !== reqBody.token) {
       throw new ApiError(StatusCodes.NOT_ACCEPTED, 'Token không hợp lệ!')
@@ -76,7 +77,8 @@ const verify = async (reqBody) => {
       isActive: true,
       verifyToken: null
     }
-    return pickUser(updateData)
+    const updateUser = await userModel.update(exitUser._id, updateData)
+    return pickUser(updateUser)
   } catch (error) {
     throw error
   }
@@ -114,9 +116,23 @@ const login = async (reqBody) => {
     throw error
   }
 }
+const refreshToken = async (user) => {
+  try {
+    const refreshTokenDecode = JwtProvider.verifyToken(user, process.env.REFRESH_SECRET_SIGNATURE)
+    const userInfor = {
+      email: refreshTokenDecode.email,
+      _id: refreshTokenDecode._id
+    }
+    const accessToken = await JwtProvider.generateToken(userInfor, process.env.ACCESS_SECRET_SIGNATURE, process.env.ACCESS_TOKEN_LIFE)
+    return { accessToken }
+  } catch (error) {
+    throw error
+  }
+}
 
 export const userService = {
   createNew,
   verify,
-  login
+  login,
+  refreshToken
 }

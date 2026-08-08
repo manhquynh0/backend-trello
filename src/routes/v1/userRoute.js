@@ -13,5 +13,9 @@ Router.route('/verify')
   .put(userValidation.verify, userController.verify)
 Router.route('/login')
   .post(userValidation.login, userController.login)
+Router.route('/refresh_token')
+  .post(userController.refreshToken)
+Router.route('/logout')
+  .delete(userController.logout)
 
 export default Router

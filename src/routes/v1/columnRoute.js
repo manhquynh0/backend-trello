@@ -5,12 +5,15 @@ import {
 import {
   columnController
 } from '~/controllers/columnController'
+import {
+  authMiddleware
+} from '~/middlewares/authMiddleware'
 const Router = express.Router()
 Router.route('/')
-  .post(columnValidations.createdNew, columnController.createdNew)
+  .post(authMiddleware.isAuthorized, columnValidations.createdNew, columnController.createdNew)
 Router.route('/:id')
-  .put(columnValidations.updatedColumn, columnController.updatedColumn)
-  .patch(columnController.deletedColumn)
+  .put(authMiddleware.isAuthorized, columnValidations.updatedColumn, columnController.updatedColumn)
+  .patch(authMiddleware.isAuthorized, columnController.deletedColumn)
 
 
 export default Router
