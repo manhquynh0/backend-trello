@@ -1,5 +1,6 @@
 /* eslint-disable no-useless-catch */
 import Joi from 'joi'
+import { ObjectId } from 'mongodb'
 import {
   EMAIL_RULE,
   EMAIL_RULE_MESSAGE,
@@ -51,7 +52,7 @@ const createNew = async (data) => {
 const findOneById = async (userId) => {
   try {
     const result = await GET_DB().collection(USER_COLLECTION_NAME).findOne({
-      _id: new Object(userId)
+      _id: new ObjectId(userId)
     })
     return result
   } catch (error) {
@@ -76,13 +77,13 @@ const update = async (userId, updateData) => {
       }
     })
     const result = await GET_DB().collection(USER_COLLECTION_NAME).findOneAndUpdate({
-      _id: new Object(userId)
+      _id: new ObjectId(userId)
     }, {
       $set: updateData
     }, {
       returnDocument: 'after'
     })
-    return result
+    return result ?? null
   } catch (error) {
     throw error
   }

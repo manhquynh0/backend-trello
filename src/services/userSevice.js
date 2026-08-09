@@ -93,7 +93,8 @@ const login = async (reqBody) => {
     if (!exitUser.isActive) {
       throw new ApiError(StatusCodes.NOT_ACCEPTED, 'Tài khoản chưa được kích hoạt')
     }
-    if (!(await bcryptjs.compare(reqBody.password, exitUser.password))) {
+    const result = await bcryptjs.compare(reqBody.password, exitUser.password)
+    if (!result) {
       throw new ApiError(
         StatusCodes.NOT_ACCEPTABLE,
         'Email hoặc mật khẩu không đúng!'
@@ -103,7 +104,9 @@ const login = async (reqBody) => {
       email: exitUser.email,
       _id: exitUser._id
     }
-    const accessToken = await JwtProvider.generateToken(userInfor, process.env.ACCESS_SECRET_SIGNATURE, process.env.ACCESS_TOKEN_LIFE)
+    const accessToken = await JwtProvider.generateToken(userInfor,
+      process.env.ACCESS_SECRET_SIGNATURE,
+      process.env.ACCESS_TOKEN_LIFE)
     const refreshToken = await JwtProvider.generateToken(userInfor, process.env.REFRESH_SECRET_SIGNATURE, process.env.REFRESH_TOKEN_LIFE)
 
     return {
@@ -123,8 +126,40 @@ const refreshToken = async (user) => {
       email: refreshTokenDecode.email,
       _id: refreshTokenDecode._id
     }
-    const accessToken = await JwtProvider.generateToken(userInfor, process.env.ACCESS_SECRET_SIGNATURE, process.env.ACCESS_TOKEN_LIFE)
-    return { accessToken }
+    const accessToken = await JwtProvider.generateToken(userInfor, process.env.ACCESS_SECRET_SIGNATURE, 5)
+    return {
+      accessToken
+    }
+  } catch (error) {
+    throw error
+  }
+}
+const update = async (userId, reqBody) => {
+  try {
+    const exitUser = await userModel.findOneById(userId)
+    if (!exitUser) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Không tìm thấy tài khoản!')
+    }
+
+    let updatedUser = {}
+
+    if (reqBody.password && reqBody.newPassword) {
+      const result = await bcryptjs.compare(reqBody.password, exitUser.password)
+      if (!result) {
+        throw new ApiError(
+          StatusCodes.NOT_ACCEPTABLE,
+          'Email hoặc mật khẩu không đúng!'
+        )
+      }
+      updatedUser = await userModel.update(userId, {
+        password: bcryptjs.hashSync(reqBody.newPassword, 8)
+
+      })
+    } else {
+      updatedUser = await userModel.update(userId, reqBody)
+    }
+
+    return pickUser(updatedUser)
   } catch (error) {
     throw error
   }
@@ -134,5 +169,6 @@ export const userService = {
   createNew,
   verify,
   login,
-  refreshToken
+  refreshToken,
+  update
 }

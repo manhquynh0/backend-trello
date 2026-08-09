@@ -53,7 +53,7 @@ const logout = async (req, res, next) => {
 }
 const refreshToken = async (req, res, next) => {
   try {
-    const result = await userService.refreshToken(req?.cookie?.refreshToken)
+    const result = await userService.refreshToken(req?.cookies?.refreshToken)
     res.cookie('accessToken', result.accessToken, {
       httpOnly: true,
       secure: true,
@@ -65,10 +65,21 @@ const refreshToken = async (req, res, next) => {
     next(new ApiError(StatusCodes.UNAUTHORIZED, 'Please Sign In !'))
   }
 }
+const update = async (req, res, next) => {
+  try {
+    const userId = req.jwtDecoded._id
+    const result = await userService.update(userId, req.body)
+
+    res.status(StatusCodes.OK).json(result)
+  } catch (error) {
+    next(error)
+  }
+}
 export const userController = {
   createNew,
   verify,
   login,
   logout,
-  refreshToken
+  refreshToken,
+  update
 }
