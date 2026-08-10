@@ -22,6 +22,9 @@ import {
 import {
   JwtProvider
 } from '~/providers/JwtProvider'
+import {
+  CloudinaryProvider
+} from '~/providers/CloudinaryProvider'
 require('dotenv').config()
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
@@ -134,7 +137,7 @@ const refreshToken = async (user) => {
     throw error
   }
 }
-const update = async (userId, reqBody) => {
+const update = async (userId, reqBody, userAvatarFile) => {
   try {
     const exitUser = await userModel.findOneById(userId)
     if (!exitUser) {
@@ -153,6 +156,13 @@ const update = async (userId, reqBody) => {
       }
       updatedUser = await userModel.update(userId, {
         password: bcryptjs.hashSync(reqBody.newPassword, 8)
+
+      })
+    } else if (userAvatarFile) {
+      const uploadResult = await CloudinaryProvider.streamUpload(userAvatarFile.buffer, 'users')
+      console.log(uploadResult)
+      updatedUser = await userModel.update(userId, {
+        avatar: uploadResult.secure_url
 
       })
     } else {

@@ -5,6 +5,9 @@ import {
 import {
   userController
 } from '~/controllers/userController'
+import {
+  multerUploadMiddleware
+} from '~/middlewares/multerUpLoadMiddleware'
 const Router = express.Router()
 import {
   authMiddleware
@@ -20,5 +23,10 @@ Router.route('/refresh_token')
 Router.route('/logout')
   .delete(userController.logout)
 Router.route('/update')
-  .put(authMiddleware.isAuthorized, userValidation.update, userController.update)
+  .put(
+    authMiddleware.isAuthorized,
+    multerUploadMiddleware.upload.single('avatar'),
+    userValidation.update,
+    userController.update
+  )
 export default Router

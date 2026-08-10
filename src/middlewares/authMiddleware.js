@@ -13,7 +13,7 @@ const isAuthorized = async (req, res, next) => {
   const clientAccessToken = req.cookies?.accessToken
 
   if (!clientAccessToken) {
-    next(new ApiError(StatusCodes.UNAUTHORIZED, 'Unauthorized !, token not found'))
+    return next(new ApiError(StatusCodes.UNAUTHORIZED, 'Unauthorized !, token not found'))
   }
   try {
     // b1 : giai ma xem token co hop le hay khong
@@ -27,9 +27,9 @@ const isAuthorized = async (req, res, next) => {
 
   } catch (error) {
     if (error?.message?.includes('jwt expired')) {
-      next(new ApiError(StatusCodes.GONE, 'Need to refreshToken'))
+      return next(new ApiError(StatusCodes.GONE, 'Need to refreshToken'));
     }
-    next(new ApiError(StatusCodes.UNAUTHORIZED, 'Unauthorized !'))
+    return next(new ApiError(StatusCodes.UNAUTHORIZED, 'Unauthorized !'))
 
   }
 }
