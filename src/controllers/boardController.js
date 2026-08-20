@@ -39,9 +39,23 @@ const movingCard = async (req, res, next) => {
     next(error)
   }
 }
+const getBoards = async (req, res, next) => {
+  try {
+    const userID = req.jwtDecoded._id
+    const {
+      page,
+      itemperpage
+    } = req.query
+    const getBoards = await boardService.getBoards(userID, page, itemperpage)
+    res.status(StatusCodes.OK).json(getBoards)
+  } catch (error) {
+    next(error)
+  }
+}
 export const boardController = {
   createdNew,
   getDetails,
   updateBoard,
-  movingCard
+  movingCard,
+  getBoards
 }

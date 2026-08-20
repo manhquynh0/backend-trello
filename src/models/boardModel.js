@@ -14,6 +14,7 @@ import {
 import {
   BOARD_TYPES
 } from '~/utils/constants'
+import { pagingSkipValue } from '~/utils/algorithms'
 const INVALID_UPDATE_FIELDS = ['_id', 'createdAt']
 const BOARD_COLLECTION_NAME = 'boards'
 const BOARD_COLLECTION_SCHEMA = Joi.object({
@@ -37,6 +38,8 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
     .strict(),
   type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE).required(),
   columnOrderIds: Joi.array().items(Joi.string()).default([]),
+  ownerIds: Joi.array().items(Joi.string()).default([]),
+  memberIds: Joi.array().items(Joi.string()).default([]),
   createdAt: Joi.date().default(Date.now),
   updatedAt: Joi.date().default(Date.now),
   _destroy: Joi.boolean().default(false)
@@ -143,6 +146,68 @@ const updateBoard = async (boardId, updateData) => {
     throw new Error(error)
   }
 }
+const getBoards = async (userId, page, itemperpage) => {
+  try {
+    const queryConditons = [
+      {
+        _destroy: false
+      },
+      {
+        $or: [
+          {
+            ownerIds: {
+              $all: [new ObjectId(userId)]
+            }
+          },
+          {
+            memberIds: {
+              $all: [new ObjectId(userId)]
+            }
+          }
+        ]
+      }
+    ]
+
+    const query = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate(
+      [
+        { $match : { $and : queryConditons } },
+        { $sort : { createdAt : 1 } },
+        // facet : xu ly nhieu luong trong 1 query
+        { $facet : {
+          // luong 01 : query boards
+          'queryBoards' : [
+            {
+              $skip : pagingSkipValue(page, itemperpage)
+            },
+            {
+              $limit : itemperpage // toi da 10 ban ghi tren 1 page
+            }
+          ],
+
+          // luong 02 : query tong so luong tat cac cac ban ghi board trong db
+          'queryTotalBoards' : [
+            {
+              $count : 'countedAllBoards'
+            }
+          ]
+        } }
+      ],
+      {
+        collation : { locale : 'en' } // xu ly trong truong hop sort theo ten ASCII
+      }
+    ).toArray()
+
+    console.log(query)
+    const res = query[0]
+
+    return {
+      boards : res.queryBoards || [],
+      totalBoards : res.queryTotalBoards[0]?.countedAllBoards || 0
+    }
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
@@ -150,5 +215,6 @@ export const boardModel = {
   findOneById,
   getDetails,
   pushColumnOrderIds,
-  updateBoard
+  updateBoard,
+  getBoards
 }

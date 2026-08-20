@@ -2,7 +2,7 @@ import {
   StatusCodes
 } from 'http-status-codes'
 import ApiError from '../utils/ApiError'
-import slugify from '../utils/formatter'
+import { slugify } from '../utils/formatter'
 import {
   boardModel
 } from '~/models/boardModel'
@@ -15,6 +15,10 @@ import {
 import {
   cloneDeep
 } from 'lodash'
+import {
+  DEFAULT_ITEM_PERPAGE,
+  DEFAULT_PAGE
+} from '~/utils/constants'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -94,9 +98,21 @@ const movingCard = async (reqBody) => {
     throw error
   }
 }
+const getBoards = async (userID, page, itemperpage) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    if (!page) page = DEFAULT_PAGE
+    if (!itemperpage) itemperpage = DEFAULT_ITEM_PERPAGE
+    const results = await boardModel.getBoards(userID, parseInt(page, 10), parseInt(itemperpage, 10))
+    return results
+  } catch (error) {
+    throw error
+  }
+}
 export const boardService = {
   createNew,
   getDetails,
   updateBoard,
-  movingCard
+  movingCard,
+  getBoards
 }
