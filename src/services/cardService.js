@@ -2,10 +2,8 @@ import {
   StatusCodes
 } from 'http-status-codes'
 import ApiError from '../utils/ApiError'
-import slugify from '../utils/formatter'
 import {
-  cardModel,
-  findOneById
+  cardModel
 } from '~/models/cardModel'
 import {
   cloneDeep
@@ -13,6 +11,9 @@ import {
 import {
   columnModel
 } from '../models/columnModel'
+import {
+  CloudinaryProvider
+} from '~/providers/CloudinaryProvider'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -52,16 +53,25 @@ const getDetails = async (cardId) => {
     throw error
   }
 }
-const updatedCard = async (cardId, reqBody) => {
+const updatedCard = async (cardId, reqBody, cardCoverFile) => {
   // eslint-disable-next-line no-useless-catch
   try {
     const updateData = {
       ...reqBody,
       updatedAt: Date.now()
-
     }
-    const updatedColumn = await cardModel.updatedCard(cardId, updateData)
-    return updatedColumn
+    let updateCard = {}
+    if (cardCoverFile) {
+      const uploadResult = await CloudinaryProvider.streamUpload(cardCoverFile.buffer, 'card-covers')
+      updateCard = await cardModel.updatedCard(cardId, {
+        cover: uploadResult.secure_url
+      })
+
+    } else {
+      updateCard = await cardModel.updatedCard(cardId, updateData)
+    }
+
+    return updateCard
   } catch (error) {
     throw error
   }
