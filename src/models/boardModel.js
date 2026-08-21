@@ -50,10 +50,14 @@ const validateBeforeCreate = async (data) => {
     abortEarly: false
   })
 }
-const createNew = async (data) => {
+const createNew = async (userId, data) => {
   try {
     const validatedData = await validateBeforeCreate(data)
-    const createdBoard = await GET_DB().collection(BOARD_COLLECTION_NAME).insertOne(validatedData)
+    const newBoardtoAdd = {
+      ...validatedData,
+      ownerIds : [new ObjectId(userId)]
+    }
+    const createdBoard = await GET_DB().collection(BOARD_COLLECTION_NAME).insertOne(newBoardtoAdd)
     return createdBoard
   } catch (error) {
     throw new Error(error)
@@ -70,14 +74,34 @@ const findOneById = async (id) => {
     throw new Error(error)
   }
 }
-const getDetails = async (id) => {
+const getDetails = async (userId, boardId) => {
   try {
+    const queryConditons = [
+      {
+        _id: new ObjectId(boardId)
+      }
+      ,
+      {
+        _destroy: false
+      },
+      {
+        $or: [
+          {
+            ownerIds: {
+              $all: [new ObjectId(userId)]
+            }
+          },
+          {
+            memberIds: {
+              $all: [new ObjectId(userId)]
+            }
+          }
+        ]
+      }
+    ]
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([
       {
-        $match: {
-          _id: new ObjectId(id),
-          _destroy: false
-        }
+        $match: { $and :  queryConditons }
       },
       {
         $lookup: {
@@ -171,7 +195,7 @@ const getBoards = async (userId, page, itemperpage) => {
     const query = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate(
       [
         { $match : { $and : queryConditons } },
-        { $sort : { createdAt : 1 } },
+        { $sort : { createdAt : -1 } },
         // facet : xu ly nhieu luong trong 1 query
         { $facet : {
           // luong 01 : query boards
@@ -187,7 +211,7 @@ const getBoards = async (userId, page, itemperpage) => {
           // luong 02 : query tong so luong tat cac cac ban ghi board trong db
           'queryTotalBoards' : [
             {
-              $count : 'countedAllBoards'
+              $count : 'countedAllBoards' // dem tong so luong bang roi luu vao bien countedAllBoards
             }
           ]
         } }
@@ -196,9 +220,7 @@ const getBoards = async (userId, page, itemperpage) => {
         collation : { locale : 'en' } // xu ly trong truong hop sort theo ten ASCII
       }
     ).toArray()
-
-    console.log(query)
-    const res = query[0]
+    const res = query[0] // query la mot mang
 
     return {
       boards : res.queryBoards || [],
