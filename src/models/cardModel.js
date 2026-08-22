@@ -98,11 +98,31 @@ const updatedCard = async (cardId, updateData) => {
     throw new Error(error)
   }
 }
+const unshiftComment = async (cardId, commentData) => {
+  try {
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate({
+      _id: new ObjectId(cardId)
+    }, {
+      $push: {
+        comments: {
+          $each: [commentData],
+          $position: 0
+        }
+      }
 
+    }, {
+      returnDocument: 'after'
+    })
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 export const cardModel = {
   createNew,
   findOneById,
   CARD_COLLECTION_NAME,
   CARD_COLLECTION_SCHEMA,
-  updatedCard
+  updatedCard,
+  unshiftComment
 }
