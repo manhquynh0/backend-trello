@@ -56,7 +56,7 @@ const createNew = async (userId, data) => {
     const validatedData = await validateBeforeCreate(data)
     const newBoardtoAdd = {
       ...validatedData,
-      ownerIds : [new ObjectId(userId)]
+      ownerIds: [new ObjectId(userId)]
     }
     const createdBoard = await GET_DB().collection(BOARD_COLLECTION_NAME).insertOne(newBoardtoAdd)
     return createdBoard
@@ -102,7 +102,7 @@ const getDetails = async (userId, boardId) => {
     ]
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([
       {
-        $match: { $and :  queryConditons }
+        $match: { $and: queryConditons }
       },
       {
         $lookup: {
@@ -129,7 +129,7 @@ const getDetails = async (userId, boardId) => {
           //pipeline : trong lọokup là để xử lý một hoặc nhiều luồng cần thiết
           // $project để chỉ định vài field không muốn lấy về bằng cách gán giá trị = 0
 
-          pipeline : [{ $project :  { 'password' : 0, 'verifyToken' : 0 } }]
+          pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
         }
       },
       {
@@ -138,12 +138,16 @@ const getDetails = async (userId, boardId) => {
           localField: 'memberIds',
           foreignField: '_id',
           as: 'members',
-          pipeline : [{ $project :  { 'password' : 0, 'verifyToken' : 0 } }]
+          pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
         }
       }
     ]).toArray()
-    const board = result[0] || {}
-    board.columns = board.columns.filter(column => !column._destroy)
+    const board = result[0]
+    if (!board) return null
+
+    if (board.columns) {
+      board.columns = board.columns.filter(column => !column._destroy)
+    }
 
     return board
   } catch (error) {
@@ -160,7 +164,7 @@ const pushColumnOrderIds = async (column) => {
         columnOrderIds: new ObjectId(column._id)
       }
     }, {
-      ReturnDocument: 'after'
+      returnDocument: 'after'
     })
     return result || null
   } catch (error) {
@@ -216,38 +220,56 @@ const getBoards = async (userId, page, itemperpage) => {
 
     const query = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate(
       [
-        { $match : { $and : queryConditons } },
-        { $sort : { createdAt : -1 } },
+        { $match: { $and: queryConditons } },
+        { $sort: { createdAt: -1 } },
         // facet : xu ly nhieu luong trong 1 query
-        { $facet : {
-          // luong 01 : query boards
-          'queryBoards' : [
-            {
-              $skip : pagingSkipValue(page, itemperpage)
-            },
-            {
-              $limit : itemperpage // toi da 10 ban ghi tren 1 page
-            }
-          ],
+        {
+          $facet: {
+            // luong 01 : query boards
+            'queryBoards': [
+              {
+                $skip: pagingSkipValue(page, itemperpage)
+              },
+              {
+                $limit: itemperpage // toi da 10 ban ghi tren 1 page
+              }
+            ],
 
-          // luong 02 : query tong so luong tat cac cac ban ghi board trong db
-          'queryTotalBoards' : [
-            {
-              $count : 'countedAllBoards' // dem tong so luong bang roi luu vao bien countedAllBoards
-            }
-          ]
-        } }
+            // luong 02 : query tong so luong tat cac cac ban ghi board trong db
+            'queryTotalBoards': [
+              {
+                $count: 'countedAllBoards' // dem tong so luong bang roi luu vao bien countedAllBoards
+              }
+            ]
+          }
+        }
       ],
       {
-        collation : { locale : 'en' } // xu ly trong truong hop sort theo ten ASCII
+        collation: { locale: 'en' } // xu ly trong truong hop sort theo ten ASCII
       }
     ).toArray()
     const res = query[0] // query la mot mang
 
     return {
-      boards : res.queryBoards || [],
-      totalBoards : res.queryTotalBoards[0]?.countedAllBoards || 0
+      boards: res.queryBoards || [],
+      totalBoards: res.queryTotalBoards[0]?.countedAllBoards || 0
     }
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+const pushMemberIds = async (boardId, userId) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate({
+      _id: new ObjectId(boardId)
+    }, {
+      $push: {
+        memberIds: new ObjectId(userId)
+      }
+    }, {
+      returnDocument: 'after'
+    })
+    return result || null
   } catch (error) {
     throw new Error(error)
   }
@@ -258,6 +280,7 @@ export const boardModel = {
   createNew,
   findOneById,
   getDetails,
+  pushMemberIds,
   pushColumnOrderIds,
   updateBoard,
   getBoards

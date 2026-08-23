@@ -70,9 +70,9 @@ const updatedCard = async (cardId, reqBody, cardCoverFile, userInfor) => {
     } else if (updateData.commentToAdd) {
       const commentData = {
         ...updateData.commentToAdd,
-        commentAt : Date.now(),
-        userId : userInfor._id,
-        userEmail : userInfor.email
+        commentAt: Date.now(),
+        userId: userInfor._id,
+        userEmail: userInfor.email
       }
       updateCard = await cardModel.unshiftComment(cardId, commentData)
 

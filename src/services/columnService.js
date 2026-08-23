@@ -41,7 +41,7 @@ const getDetails = async (columnId) => {
     const rescolumn = cloneDeep(column) // clone column
     rescolumn.columns.forEach(column => {
       column.cards = rescolumn.cards.filter(card => {
-        return card.columnId.equals(column._id)
+        return card.columnId?.toString() === column._id?.toString()
       })
     })
     delete rescolumn.cards
@@ -69,7 +69,7 @@ const deletedColumn = async (columnId) => {
   // eslint-disable-next-line no-useless-catch
   try {
     const deletedColumn = await columnModel.updatedColumn(columnId, {
-      _destroy : true
+      _destroy: true
     })
     return deletedColumn
   } catch (error) {

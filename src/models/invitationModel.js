@@ -136,22 +136,15 @@ const findOneById = async (id) => {
   }
 }
 
-const updateBoard = async (boardId, updateData) => {
+const update = async (invitationId, updateData) => {
   try {
-    Object.keys(updateData).forEach(fieldName => {
-      if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
-        delete updateData[fieldName]
-      }
-    })
-    if (updateData.columnOrderIds) {
-      updateData.columnOrderIds = updateData.columnOrderIds.map(_id =>
-        (new ObjectId(_id))
-      )
-    }
     const result = await GET_DB().collection(INVITATION_COLLECTION_NAME).findOneAndUpdate({
-      _id: new ObjectId(boardId)
+      _id: new ObjectId(invitationId)
     }, {
-      $set: updateData
+      $set: {
+        ...updateData,
+        updatedAt: Date.now()
+      }
 
     }, {
       returnDocument: 'after'
@@ -161,12 +154,11 @@ const updateBoard = async (boardId, updateData) => {
     throw new Error(error)
   }
 }
-
 export const invitationModel = {
   INVITATION_COLLECTION_NAME,
   INVITATION_COLLECTION_SCHEMA,
   createNew,
   findOneById,
-  updateBoard,
+  update,
   findByUser
 }

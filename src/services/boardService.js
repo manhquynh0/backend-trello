@@ -44,13 +44,13 @@ const getDetails = async (userId, boardId) => {
 
 
     const resBoard = cloneDeep(board) // clone board
-    resBoard.columns.forEach(column => {
-      column.cards = resBoard.cards.filter(card => {
-        return card.columnId.equals(column._id)
+    resBoard?.columns?.forEach(column => {
+      column.cards = resBoard?.cards.filter(card => {
+        return card.columnId?.toString() === column._id?.toString()
       })
     })
-    delete resBoard.cards
-    return resBoard
+    delete resBoard?.cards
+    return resBoard || {}
 
   } catch (error) {
     throw error

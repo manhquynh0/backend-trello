@@ -12,6 +12,9 @@ import {
   errorHandlingMiddleware
 } from '~/middlewares/errorHandlingMiddleware'
 import cookie from 'cookie-parser'
+import http from 'http'
+import { Server } from 'socket.io'
+import { inviteUserToBoardSocket } from '~/sockets/inviteUserToBoardSocket'
 const START_SERVER = () => {
   const app = express()
   app.use(cors(corsOptions))
@@ -28,7 +31,16 @@ const START_SERVER = () => {
 
   app.use(errorHandlingMiddleware)
 
-  app.listen(3000, () => {
+  const httpServer = http.createServer(app)
+  const io = new Server(httpServer, {
+    cors: corsOptions
+  })
+  io.on('connection', (socket) => {
+    console.log('New user connected:', socket.id)
+    inviteUserToBoardSocket(socket)
+  })
+
+  httpServer.listen(3000, () => {
     console.log('Server is running on http://localhost:3000')
   })
 }
