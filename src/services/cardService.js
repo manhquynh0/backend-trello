@@ -36,19 +36,9 @@ const getDetails = async (cardId) => {
   try {
     const card = await cardModel.getDetails(cardId)
     if (!card) {
-      throw new ApiError(StatusCodes.NOT_FOUND, 'card Not Found')
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Card Not Found!')
     }
-
-
-    const rescard = cloneDeep(card) // clone card
-    rescard.columns.forEach(column => {
-      column.cards = rescard.cards.filter(card => {
-        return card.columnId.equals(column._id)
-      })
-    })
-    delete rescard.cards
-    return rescard
-
+    return card
   } catch (error) {
     throw error
   }
@@ -75,6 +65,9 @@ const updatedCard = async (cardId, reqBody, cardCoverFile, userInfor) => {
         userEmail: userInfor.email
       }
       updateCard = await cardModel.unshiftComment(cardId, commentData)
+
+    } else if (updateData.incomingMemberInfo) {
+      updateCard = await cardModel.updateMembers(cardId, updateData.incomingMemberInfo)
 
     } else {
       updateCard = await cardModel.updatedCard(cardId, updateData)

@@ -15,6 +15,7 @@ import cookie from 'cookie-parser'
 import http from 'http'
 import { Server } from 'socket.io'
 import { inviteUserToBoardSocket } from '~/sockets/inviteUserToBoardSocket'
+import { userJoinCardSocket } from '~/sockets/userJoinCardSocket'
 const START_SERVER = () => {
   const app = express()
   app.use(cors(corsOptions))
@@ -38,6 +39,7 @@ const START_SERVER = () => {
   io.on('connection', (socket) => {
     console.log('New user connected:', socket.id)
     inviteUserToBoardSocket(socket)
+    userJoinCardSocket(socket)
   })
 
   httpServer.listen(3000, () => {

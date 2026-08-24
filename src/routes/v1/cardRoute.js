@@ -15,6 +15,7 @@ const Router = express.Router()
 Router.route('/')
   .post(authMiddleware.isAuthorized, cardValidations.createdNew, cardController.createdNew)
 Router.route('/:id')
+  .get(authMiddleware.isAuthorized, cardController.getDetails)
   .put(authMiddleware.isAuthorized,
     multerUploadMiddleware.upload.single('cardCover'),
     cardValidations.updated,

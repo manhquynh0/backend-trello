@@ -14,6 +14,7 @@ import {
   EMAIL_RULE_MESSAGE
 
 } from '~/utils/validators'
+import { userModel } from './userModel'
 // Define Collection (name & schema)
 const CARD_COLLECTION_NAME = 'cards'
 const INVALID_UPDATE_FIELDS = ['_id', 'boardId', 'createdAt']
@@ -118,11 +119,61 @@ const unshiftComment = async (cardId, commentData) => {
     throw new Error(error)
   }
 }
+
+const updateMembers = async (cardId, incomingMemberInfo) => {
+  try {
+    let updateCondition = {}
+    if (incomingMemberInfo.action === 'ADD') {
+      updateCondition = { $push: { memberIds: new ObjectId(incomingMemberInfo.userId) } }
+    }
+    if (incomingMemberInfo.action === 'REMOVE') {
+      updateCondition = { $pull: { memberIds: new ObjectId(incomingMemberInfo.userId) } }
+    }
+
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(cardId) },
+      updateCondition,
+      { returnDocument: 'after' }
+    )
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+const getDetails = async (cardId) => {
+  try {
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).aggregate([
+      {
+        $match: {
+          _id: new ObjectId(cardId),
+          _destroy: false
+        }
+      },
+      {
+        $lookup: {
+          from: userModel.USER_COLLECTION_NAME,
+          localField: 'memberIds',
+          foreignField: '_id',
+          as: 'members',
+          pipeline: [{ $project: { password: 0, verifyToken: 0 } }]
+        }
+      }
+    ]).toArray()
+
+    return result[0] || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const cardModel = {
   createNew,
   findOneById,
   CARD_COLLECTION_NAME,
   CARD_COLLECTION_SCHEMA,
   updatedCard,
-  unshiftComment
+  unshiftComment,
+  updateMembers,
+  getDetails
 }
