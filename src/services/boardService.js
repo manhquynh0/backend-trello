@@ -98,12 +98,12 @@ const movingCard = async (reqBody) => {
     throw error
   }
 }
-const getBoards = async (userID, page, itemperpage) => {
+const getBoards = async (userID, page, itemperpage, queryFilter) => {
   // eslint-disable-next-line no-useless-catch
   try {
     if (!page) page = DEFAULT_PAGE
     if (!itemperpage) itemperpage = DEFAULT_ITEM_PERPAGE
-    const results = await boardModel.getBoards(userID, parseInt(page, 10), parseInt(itemperpage, 10))
+    const results = await boardModel.getBoards(userID, parseInt(page, 10), parseInt(itemperpage, 10), queryFilter)
     return results
   } catch (error) {
     throw error

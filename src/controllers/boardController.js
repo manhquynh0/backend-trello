@@ -46,9 +46,13 @@ const getBoards = async (req, res, next) => {
     const userID = req.jwtDecoded._id
     const {
       page,
-      itemperpage
+      itemperpage,
+      q
     } = req.query
-    const getBoards = await boardService.getBoards(userID, page, itemperpage)
+
+    // q gửi từ FE dạng q[title]=abc sẽ được Express parse thành object { title: 'abc' }
+    const queryFilter = q
+    const getBoards = await boardService.getBoards(userID, page, itemperpage, queryFilter)
     res.status(StatusCodes.OK).json(getBoards)
   } catch (error) {
     next(error)

@@ -196,7 +196,7 @@ const updateBoard = async (boardId, updateData) => {
     throw new Error(error)
   }
 }
-const getBoards = async (userId, page, itemperpage) => {
+const getBoards = async (userId, page, itemperpage, queryFilter) => {
   try {
     const queryConditons = [
       {
@@ -217,6 +217,17 @@ const getBoards = async (userId, page, itemperpage) => {
         ]
       }
     ]
+    // Xu ly query filter
+    if (queryFilter) {
+      Object.keys(queryFilter).forEach(key => {
+        // Phân biệt hoa thường
+        // queryConditons.push({ [key]: { $regex: queryFilter[key] } })
+
+        // Không phân biệt hoa thường
+        queryConditons.push({ [key]: { $regex: new RegExp(queryFilter[key], 'i') } })
+
+      })
+    }
 
     const query = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate(
       [
