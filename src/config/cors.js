@@ -1,5 +1,5 @@
 import { WHITELIST_DOMAINS } from '../utils/constants'
-require('dotenv').config()
+import 'dotenv/config'
 import { StatusCodes } from 'http-status-codes'
 import ApiError from '~/utils/ApiError'
 

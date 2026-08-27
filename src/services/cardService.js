@@ -6,14 +6,12 @@ import {
   cardModel
 } from '~/models/cardModel'
 import {
-  cloneDeep
-} from 'lodash'
-import {
   columnModel
 } from '../models/columnModel'
 import {
   CloudinaryProvider
 } from '~/providers/CloudinaryProvider'
+import { redisHelper } from '~/helpers/redisHelper'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -34,10 +32,16 @@ const createNew = async (reqBody) => {
 const getDetails = async (cardId) => {
   // eslint-disable-next-line no-useless-catch
   try {
+    const key = `card:${cardId}`
+    const cacheCard = await redisHelper.get(key)
+    if (cacheCard) {
+      return cacheCard
+    }
     const card = await cardModel.getDetails(cardId)
     if (!card) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Card Not Found!')
     }
+    await redisHelper.set(key, card)
     return card
   } catch (error) {
     throw error
@@ -46,6 +50,7 @@ const getDetails = async (cardId) => {
 const updatedCard = async (cardId, reqBody, cardCoverFile, userInfor) => {
   // eslint-disable-next-line no-useless-catch
   try {
+    const key = `card:${cardId}`
     const updateData = {
       ...reqBody,
       updatedAt: Date.now()
@@ -72,6 +77,7 @@ const updatedCard = async (cardId, reqBody, cardCoverFile, userInfor) => {
     } else {
       updateCard = await cardModel.updatedCard(cardId, updateData)
     }
+    await redisHelper.del(key)
 
     return updateCard
   } catch (error) {

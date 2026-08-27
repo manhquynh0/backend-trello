@@ -19,6 +19,7 @@ import {
   DEFAULT_ITEM_PERPAGE,
   DEFAULT_PAGE
 } from '~/utils/constants'
+import { redisHelper } from '~/helpers/redisHelper'
 const createNew = async (userId, reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -37,6 +38,13 @@ const createNew = async (userId, reqBody) => {
 const getDetails = async (userId, boardId) => {
   // eslint-disable-next-line no-useless-catch
   try {
+    const key = `board:${boardId}`
+    const cacheBoarad = await redisHelper.get(key)
+    if (cacheBoarad) {
+      console.log('cache board from redis')
+      return cacheBoarad
+    }
+      console.log('cache board from Mongodb')
     const board = await boardModel.getDetails(userId, boardId)
     if (!board) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Board Not Found')
@@ -50,6 +58,7 @@ const getDetails = async (userId, boardId) => {
       })
     })
     delete resBoard?.cards
+    await redisHelper.set(key, resBoard)
     return resBoard || {}
 
   } catch (error) {
@@ -59,11 +68,14 @@ const getDetails = async (userId, boardId) => {
 const updateBoard = async (boardId, reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
+    const key = `board:${boardId}`
     const updateData = {
       ...reqBody,
       updatedAt: Date.now()
     }
     const updateBoard = await boardModel.updateBoard(boardId, updateData)
+
+    await redisHelper.del(key)
 
     return updateBoard
   } catch (error) {
