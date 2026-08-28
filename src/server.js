@@ -17,6 +17,7 @@ import { Server } from 'socket.io'
 import { inviteUserToBoardSocket } from '~/sockets/inviteUserToBoardSocket'
 import { userJoinCardSocket } from '~/sockets/userJoinCardSocket'
 import { CONNECT_REDIS } from '~/config/redis'
+import { draggingSocket } from '~/sockets/draggingSocket'
 const START_SERVER = () => {
   const app = express()
   app.use(cors(corsOptions))
@@ -41,6 +42,7 @@ const START_SERVER = () => {
     console.log('New user connected:', socket.id)
     inviteUserToBoardSocket(socket)
     userJoinCardSocket(socket)
+    draggingSocket(socket)
   })
 
   httpServer.listen(3000, () => {

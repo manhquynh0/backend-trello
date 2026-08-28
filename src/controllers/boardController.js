@@ -58,10 +58,21 @@ const getBoards = async (req, res, next) => {
     next(error)
   }
 }
+const deleteBoard = async (req, res, next) => {
+  try {
+    const boardId = req.params.id
+    console.log(boardId)
+    const deleteBoard = await boardService.deleteBoard(boardId)
+    res.status(StatusCodes.OK).json(deleteBoard)
+  } catch (error) {
+    next(error)
+  }
+}
 export const boardController = {
   createdNew,
   getDetails,
   updateBoard,
   movingCard,
-  getBoards
+  getBoards,
+  deleteBoard
 }

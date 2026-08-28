@@ -159,6 +159,7 @@ const movingCard = async (reqBody) => {
 
     // Lưu thông tin vào Map
     dragTimers.set(boardId, time)
+    return { updateResult: 'Successfully' }
 
   } catch (error) {
     throw error
@@ -184,10 +185,26 @@ const getBoards = async (userID, page, itemperpage, queryFilter) => {
     throw error
   }
 }
+const deleteBoard = async (boardId) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const board = await boardModel.findOneById(boardId)
+    if (!board) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Board Not Found')
+    }
+    const deleteBoard = await boardModel.deleteBoard(boardId)
+    await redisHelper.delByPattern('boards:*')
+    await redisHelper.del('boards')
+    return deleteBoard
+  } catch (error) {
+    throw error
+  }
+}
 export const boardService = {
   createNew,
   getDetails,
   updateBoard,
   movingCard,
-  getBoards
+  getBoards,
+  deleteBoard
 }

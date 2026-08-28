@@ -21,6 +21,8 @@ import {
   pagingSkipValue
 } from '~/utils/algorithms'
 const INVALID_UPDATE_FIELDS = ['_id', 'createdAt']
+const COLUMN_COLLECTION_NAME = 'columns'
+const CARD_COLLECTION_NAME = 'cards'
 const BOARD_COLLECTION_NAME = 'boards'
 const BOARD_COLLECTION_SCHEMA = Joi.object({
   title: Joi.string()
@@ -354,10 +356,10 @@ const getBoards = async (userId, page, itemperpage, queryFilter) => {
           }
         }
       ], {
-        collation: {
-          locale: 'en'
-        } // xu ly trong truong hop sort theo ten ASCII
-      }
+      collation: {
+        locale: 'en'
+      } // xu ly trong truong hop sort theo ten ASCII
+    }
     ).toArray()
     const res = query[0] // query la mot mang
 
@@ -365,7 +367,7 @@ const getBoards = async (userId, page, itemperpage, queryFilter) => {
       boards: res.queryBoards || [],
       totalBoards: res.queryTotalBoards[0]?.countedAllBoards || 0,
       totalFavoriteBoards: res.queryFavoriteBoards[0]?.countedFavoriteBoards || 0,
-      totalPublicBoards: res.queryPublicBoards[0] ?.countedPublicBoards || 0,
+      totalPublicBoards: res.queryPublicBoards[0]?.countedPublicBoards || 0,
       totalPrivateBoards: res.queryPrivateBoards[0]?.countedPrivateBoards || 0
     }
   } catch (error) {
@@ -388,6 +390,25 @@ const pushMemberIds = async (boardId, userId) => {
     throw new Error(error)
   }
 }
+const deleteBoard = async (boardId) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).deleteOne({
+      _id: new ObjectId(boardId)
+    })
+
+    await GET_DB().collection(COLUMN_COLLECTION_NAME).deleteMany({
+      boardId: new ObjectId(boardId)
+    })
+
+    await GET_DB().collection(CARD_COLLECTION_NAME).deleteMany({
+      boardId: new ObjectId(boardId)
+    })
+
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
@@ -397,5 +418,6 @@ export const boardModel = {
   pushMemberIds,
   pushColumnOrderIds,
   updateBoard,
-  getBoards
+  getBoards,
+  deleteBoard
 }

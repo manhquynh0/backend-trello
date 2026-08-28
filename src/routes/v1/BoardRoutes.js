@@ -19,6 +19,7 @@ Router.route('/supports/moving_cards')
 Router.route('/:id')
   .get(authMiddleware.isAuthorized, boardController.getDetails)
   .put(authMiddleware.isAuthorized, boardValidations.updateBoard, boardController.updateBoard)
+  .delete(authMiddleware.isAuthorized, boardController.deleteBoard)
 
 
 export default Router

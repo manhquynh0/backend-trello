@@ -129,7 +129,7 @@ const refreshToken = async (user) => {
       email: refreshTokenDecode.email,
       _id: refreshTokenDecode._id
     }
-    const accessToken = await JwtProvider.generateToken(userInfor, process.env.ACCESS_SECRET_SIGNATURE, 5)
+    const accessToken = await JwtProvider.generateToken(userInfor, process.env.ACCESS_SECRET_SIGNATURE, process.env.ACCESS_TOKEN_LIFE)
     return {
       accessToken
     }
