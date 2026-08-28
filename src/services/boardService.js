@@ -1,8 +1,11 @@
+/* eslint-disable no-useless-catch */
 import {
   StatusCodes
 } from 'http-status-codes'
 import ApiError from '../utils/ApiError'
-import { slugify } from '../utils/formatter'
+import {
+  slugify
+} from '../utils/formatter'
 import {
   boardModel
 } from '~/models/boardModel'
@@ -19,7 +22,10 @@ import {
   DEFAULT_ITEM_PERPAGE,
   DEFAULT_PAGE
 } from '~/utils/constants'
-import { redisHelper } from '~/helpers/redisHelper'
+import {
+  redisHelper
+} from '~/helpers/redisHelper'
+const dragTimers = new Map()
 const createNew = async (userId, reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -30,6 +36,10 @@ const createNew = async (userId, reqBody) => {
     const createdBoard = await boardModel.createNew(userId, newBoard)
 
     const getNewBoard = await boardModel.findOneById(createdBoard.insertedId)
+    if (getNewBoard) {
+      await redisHelper.delByPattern('boards:*')
+      await redisHelper.del('boards')
+    }
     return getNewBoard
   } catch (error) {
     throw error
@@ -41,10 +51,8 @@ const getDetails = async (userId, boardId) => {
     const key = `board:${boardId}`
     const cacheBoarad = await redisHelper.get(key)
     if (cacheBoarad) {
-      console.log('cache board from redis')
       return cacheBoarad
     }
-      console.log('cache board from Mongodb')
     const board = await boardModel.getDetails(userId, boardId)
     if (!board) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Board Not Found')
@@ -75,23 +83,29 @@ const updateBoard = async (boardId, reqBody) => {
     }
     const updateBoard = await boardModel.updateBoard(boardId, updateData)
 
+    // Xóa cache chi tiết Board và danh sách Boards để cập nhật dữ liệu mới nhất (ví dụ: isFavorite, title...)
     await redisHelper.del(key)
+    await redisHelper.delByPattern('boards:*')
+    await redisHelper.del('boards')
 
     return updateBoard
   } catch (error) {
     throw error
   }
 }
-const movingCard = async (reqBody) => {
-  // eslint-disable-next-line no-useless-catch
+const syncDragDataToMongoDB = async (boardId) => {
   try {
+    const keyDrag = `drag:${boardId}`
+    const lastDragData = await redisHelper.get(keyDrag)
+
+    if (!lastDragData) return
     const {
       currentCardId,
       prevColumnId,
       prevCardOrderIds,
       nextColumnId,
       nextCardOrderIds
-    } = reqBody
+    } = lastDragData
     await columnModel.updatedColumn(prevColumnId, {
       cardOrderIds: prevCardOrderIds
     })
@@ -103,9 +117,49 @@ const movingCard = async (reqBody) => {
     await cardModel.updatedCard(currentCardId, {
       columnId: nextColumnId
     })
+
+    await redisHelper.del(keyDrag)
     return {
       updateResult: 'Successfully'
     }
+  } catch (error) {
+    throw error
+  }
+
+}
+const movingCard = async (reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const {
+      boardId
+    } = reqBody
+
+    const keyDrag = `drag:${boardId}`
+    // Lưu giá trị kéo thả vào redis
+    await redisHelper.set(keyDrag, reqBody, 60)
+
+    const keyBoard = `board:${boardId}`
+
+    // Xóa dữ liệu cacheBoard cũ
+    await redisHelper.del(keyBoard)
+    // Xử lý debounce
+    // Nếu trong vòng 2s có hành động kéo thả mới thì xóa hẹn giờ cũ ( set về 0)
+    if (dragTimers.has(boardId)) {
+      clearTimeout(dragTimers.get(boardId))
+    }
+
+    // Đặt hẹn giờ
+
+    const time = setTimeout(() => {
+      syncDragDataToMongoDB(boardId),
+        // Xóa khỏi thông tin khỏi Map
+        dragTimers.delete(boardId)
+
+    }, 500)
+
+    // Lưu thông tin vào Map
+    dragTimers.set(boardId, time)
+
   } catch (error) {
     throw error
   }
@@ -115,7 +169,16 @@ const getBoards = async (userID, page, itemperpage, queryFilter) => {
   try {
     if (!page) page = DEFAULT_PAGE
     if (!itemperpage) itemperpage = DEFAULT_ITEM_PERPAGE
+
+    // Tạo key unique duy nhất theo từng User, Page và Từ khóa tìm kiếm (Query)
+    const key = `boards:${userID}:p${page}:l${itemperpage}:q${JSON.stringify(queryFilter || {})}`
+    const cacheAllBoards = await redisHelper.get(key)
+    if (cacheAllBoards) {
+      return cacheAllBoards
+    }
+
     const results = await boardModel.getBoards(userID, parseInt(page, 10), parseInt(itemperpage, 10), queryFilter)
+    await redisHelper.set(key, results)
     return results
   } catch (error) {
     throw error

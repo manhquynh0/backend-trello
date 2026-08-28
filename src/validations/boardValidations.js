@@ -80,7 +80,8 @@ const updateBoard = async (req, res, next) => {
         'string.max': 'Mô tả không được vượt quá 256 ký tự.',
         'any.required': 'Mô tả là bắt buộc.'
       }),
-    type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE)
+    type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE),
+    isFavorite: Joi.boolean()
   })
   try {
     await correctCondition.validateAsync(req.body, {
@@ -97,6 +98,7 @@ const updateBoard = async (req, res, next) => {
 }
 const movingCard = async (req, res, next) => {
   const correctCondition = Joi.object({
+    boardId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
     prevColumnId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
     nextColumnId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
     currentCardId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),

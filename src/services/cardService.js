@@ -23,6 +23,10 @@ const createNew = async (reqBody) => {
     const getNewcard = await cardModel.findOneById(createdcard.insertedId)
     if (getNewcard) {
       await columnModel.pushCardOrderIds(getNewcard)
+      // Xóa cache Board trong Redis để khi F5 trang sẽ nạp lại Board có Card mới từ MongoDB
+      if (reqBody.boardId) {
+        await redisHelper.del(`board:${reqBody.boardId}`)
+      }
     }
     return getNewcard
   } catch (error) {

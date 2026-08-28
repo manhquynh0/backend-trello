@@ -3,54 +3,67 @@
 import { roles, getAggregatedPermissions } from '~/config/rabcConfig'
 import { boardModel } from '~/models/boardModel'
 import { cardModel } from '~/models/cardModel'
+import { columnModel } from '~/models/columnModel'
 import { StatusCodes } from 'http-status-codes'
 import ApiError from '~/utils/ApiError'
 
 export const verifyPermission = (requiredPermissions = []) => async (req, res, next) => {
   try {
     const userId = req.jwtDecoded._id
-    let boardId = req.body.boardId
-    let cardId = req.body.currentCardId || req.params.cardId
+    let boardId = req.params.boardId || req.body?.boardId || req.query?.boardId || null
+    let cardId = req.params.cardId || req.body?.cardId || req.body?.currentCardId || req.query?.cardId || null
+    let columnId = req.params.columnId || req.body?.columnId || req.query?.columnId || null
 
     if (req.params.id) {
       if (req.baseUrl?.includes('/cards')) {
         cardId = req.params.id // Với route /v1/cards/:id -> params.id chính là cardId
       } else if (req.baseUrl?.includes('/boards')) {
         boardId = req.params.id // Với route /v1/boards/:id -> params.id chính là boardId
+      } else if (req.baseUrl?.includes('/columns')) {
+        columnId = req.params.id // Với route /v1/columns/:id -> params.id chính là columnId
+      }
+    }
+    let board = null
+    let card = null
+    let column = null
+    const userRoles = new Set() // Tập hợp các vai trò mà User đang sở hữu (Multi-roles)
+
+    // 1. Kiểm tra nếu có columnId -> Tự động tìm boardId từ thông tin Column
+    if (columnId && !boardId) {
+      column = await columnModel.findOneById(columnId)
+      if (column?.boardId) {
+        boardId = column.boardId.toString()
       }
     }
 
-    let board = null
-    let card = null
-    const userRoles = new Set() // Tập hợp các vai trò mà User đang sở hữu (Multi-roles)
-
-    // 1. Kiểm tra vai trò trên Card (nếu có cardId)
+    // 2. Kiểm tra vai trò trên Card (nếu có cardId)
     if (cardId) {
       card = await cardModel.findOneById(cardId)
       if (card) {
         if (card.memberIds?.some(id => id.toString() === userId)) {
           userRoles.add(roles.MEMBER_CARD) // Gán vai trò Member Card
         }
-        // Nếu chưa có boardId thì lấy từ card.boardId
+        // Tự động lấy luôn boardId từ thông tin Card nếu chưa có boardId
         if (!boardId && card.boardId) {
-          board = await boardModel.findOneById(card.boardId)
+          boardId = card.boardId.toString()
         }
       }
     }
 
-    // 2. Kiểm tra vai trò trên Board (nếu chưa tìm thấy board từ card ở trên)
+    // 3. Kiểm tra vai trò trên Board
     if (!board && boardId) {
       board = await boardModel.findOneById(boardId)
     }
 
     if (board) {
-      if (board.ownerIds.some(id => id.toString() === userId)) {
+      if (board.ownerIds?.some(id => id.toString() === userId)) {
         userRoles.add(roles.OWNER)
       }
-      if (board.memberIds.some(id => id.toString() === userId)) {
+      if (board.memberIds?.some(id => id.toString() === userId)) {
         userRoles.add(roles.MEMBER)
       }
     }
+    console.log(userRoles)
 
     // 3. Nếu User không giữ bất kỳ vai trò nào (không thuộc Board lẫn Card nào)
     if (userRoles.size === 0) {

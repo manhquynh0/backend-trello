@@ -14,8 +14,12 @@ import {
 import {
   BOARD_TYPES
 } from '~/utils/constants'
-import { userModel } from './userModel'
-import { pagingSkipValue } from '~/utils/algorithms'
+import {
+  userModel
+} from './userModel'
+import {
+  pagingSkipValue
+} from '~/utils/algorithms'
 const INVALID_UPDATE_FIELDS = ['_id', 'createdAt']
 const BOARD_COLLECTION_NAME = 'boards'
 const BOARD_COLLECTION_SCHEMA = Joi.object({
@@ -37,6 +41,7 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
     .max(256)
     .trim()
     .strict(),
+  isFavorite: Joi.boolean().default(false),
   type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE).required(),
   columnOrderIds: Joi.array().items(Joi.string()).default([]),
   ownerIds: Joi.array().items(Joi.string()).default([]),
@@ -80,8 +85,7 @@ const getDetails = async (userId, boardId) => {
     const queryConditons = [
       {
         _id: new ObjectId(boardId)
-      }
-      ,
+      },
       {
         _destroy: false
       },
@@ -102,7 +106,9 @@ const getDetails = async (userId, boardId) => {
     ]
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([
       {
-        $match: { $and: queryConditons }
+        $match: {
+          $and: queryConditons
+        }
       },
       {
         $lookup: {
@@ -129,7 +135,12 @@ const getDetails = async (userId, boardId) => {
           //pipeline : trong lọokup là để xử lý một hoặc nhiều luồng cần thiết
           // $project để chỉ định vài field không muốn lấy về bằng cách gán giá trị = 0
 
-          pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+          pipeline: [{
+            $project: {
+              'password': 0,
+              'verifyToken': 0
+            }
+          }]
         }
       },
       {
@@ -138,7 +149,12 @@ const getDetails = async (userId, boardId) => {
           localField: 'memberIds',
           foreignField: '_id',
           as: 'members',
-          pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+          pipeline: [{
+            $project: {
+              'password': 0,
+              'verifyToken': 0
+            }
+          }]
         }
       }
     ]).toArray()
@@ -217,27 +233,81 @@ const getBoards = async (userId, page, itemperpage, queryFilter) => {
         ]
       }
     ]
-    // Xu ly query filter
-    if (queryFilter) {
-      Object.keys(queryFilter).forEach(key => {
-        // Phân biệt hoa thường
-        // queryConditons.push({ [key]: { $regex: queryFilter[key] } })
+    // sort & filterStage chỉ áp dụng cho danh sách hiển thị (queryBoards), giữ nguyên đếm tổng ở facet
 
-        // Không phân biệt hoa thường
-        queryConditons.push({ [key]: { $regex: new RegExp(queryFilter[key], 'i') } })
+    //sort
+    let sortStage = {}
+    if (queryFilter?.sort === 'newest') {
+      sortStage = {
+        createdAt: -1
+      }
+    } else if (queryFilter?.sort === 'oldest') {
+      sortStage = {
+        createdAt: 1
+      }
+    } else if (queryFilter?.sort === 'name') {
+      sortStage = {
+        title: 1
+      }
+    } else {
+      sortStage = {
+        createdAt: -1
+      }
+    }
 
-      })
+    let filterStage = {}
+
+    if (queryFilter?.title) {
+      filterStage.title = {
+        $regex: queryFilter.title,
+        $options: 'i'
+      }
+    }
+
+    if (queryFilter?.type === 'favorite') {
+      filterStage.isFavorite = true
+    }
+
+    if (queryFilter?.type === 'public') {
+      filterStage.type = BOARD_TYPES.PUBLIC
+    }
+
+    if (queryFilter?.type === 'private') {
+      filterStage.type = BOARD_TYPES.PRIVATE
     }
 
     const query = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate(
       [
-        { $match: { $and: queryConditons } },
-        { $sort: { createdAt: -1 } },
+        {
+          $match: {
+            $and: queryConditons
+          }
+        },
+        {
+          $lookup: {
+            from: userModel.USER_COLLECTION_NAME,
+            localField: 'memberIds',
+            foreignField: '_id',
+            as: 'members',
+            pipeline: [{
+              $project: {
+                'password': 0,
+                'verifyToken': 0
+              }
+            }]
+          }
+        },
         // facet : xu ly nhieu luong trong 1 query
         {
           $facet: {
             // luong 01 : query boards
             'queryBoards': [
+              {
+                $match: filterStage
+              },
+              {
+                $sort: sortStage
+              },
               {
                 $skip: pagingSkipValue(page, itemperpage)
               },
@@ -247,23 +317,56 @@ const getBoards = async (userId, page, itemperpage, queryFilter) => {
             ],
 
             // luong 02 : query tong so luong tat cac cac ban ghi board trong db
-            'queryTotalBoards': [
+            'queryTotalBoards': [{
+              $count: 'countedAllBoards' // dem tong so luong bang roi luu vao bien countedAllBoards
+            }],
+            // luong 03 : query tong so luong tat cac cac ban ghi board trong db
+            'queryFavoriteBoards': [
               {
-                $count: 'countedAllBoards' // dem tong so luong bang roi luu vao bien countedAllBoards
+                $match: {
+                  isFavorite: true
+                }
+              },
+              {
+                $count: 'countedFavoriteBoards'
+              }
+            ],
+            'queryPublicBoards': [
+              {
+                $match: {
+                  type: BOARD_TYPES.PUBLIC
+                }
+              },
+              {
+                $count: 'countedPublicBoards'
+              }
+            ],
+            'queryPrivateBoards': [
+              {
+                $match: {
+                  type: BOARD_TYPES.PRIVATE
+                }
+              },
+              {
+                $count: 'countedPrivateBoards'
               }
             ]
           }
         }
-      ],
-      {
-        collation: { locale: 'en' } // xu ly trong truong hop sort theo ten ASCII
+      ], {
+        collation: {
+          locale: 'en'
+        } // xu ly trong truong hop sort theo ten ASCII
       }
     ).toArray()
     const res = query[0] // query la mot mang
 
     return {
       boards: res.queryBoards || [],
-      totalBoards: res.queryTotalBoards[0]?.countedAllBoards || 0
+      totalBoards: res.queryTotalBoards[0]?.countedAllBoards || 0,
+      totalFavoriteBoards: res.queryFavoriteBoards[0]?.countedFavoriteBoards || 0,
+      totalPublicBoards: res.queryPublicBoards[0] ?.countedPublicBoards || 0,
+      totalPrivateBoards: res.queryPrivateBoards[0]?.countedPrivateBoards || 0
     }
   } catch (error) {
     throw new Error(error)

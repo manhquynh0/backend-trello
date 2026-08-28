@@ -11,6 +11,7 @@ import {
 import {
   cloneDeep
 } from 'lodash'
+import { redisHelper } from '~/helpers/redisHelper'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -23,6 +24,9 @@ const createNew = async (reqBody) => {
     if (getNewcolumn) {
       getNewcolumn.cards = []
       await boardModel.pushColumnOrderIds(getNewcolumn)
+      if (reqBody.boardId) {
+        await redisHelper.del(`board:${reqBody.boardId}`)
+      }
     }
     return getNewcolumn
   } catch (error) {

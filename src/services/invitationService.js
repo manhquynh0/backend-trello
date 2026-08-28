@@ -16,6 +16,7 @@ import {
   BOARD_INVITATION_STATUS
 } from '~/utils/constants'
 import { StatusCodes } from 'http-status-codes'
+import { redisHelper } from '~/helpers/redisHelper'
 
 
 const createNew = async (inviterId, reqBody) => {
@@ -73,6 +74,7 @@ const getInvitations = async (userId) => {
 const update = async (userId, invitationId, status) => {
   // eslint-disable-next-line no-useless-catch
   try {
+
     // Tìm bản ghi invitation được gửi tới userId
     const getinvitation = await invitationModel.findOneById(invitationId)
     if (!getinvitation) {
@@ -104,6 +106,10 @@ const update = async (userId, invitationId, status) => {
     // add user vào board nếu status là accepted
     if (status === BOARD_INVITATION_STATUS.ACCEPTED) {
       await boardModel.pushMemberIds(boardId, userId)
+      const key = `board:${boardId}`
+      await redisHelper.del(key)
+      await redisHelper.delByPattern('boards:*')
+      await redisHelper.del('boards')
     }
     return updateinvitation
   } catch (error) {
