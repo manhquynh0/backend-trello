@@ -19,3 +19,6 @@ export const BOARD_INVITATION_STATUS = {
   ACCEPTED: 'ACCEPTED',
   REJECTED: 'REJECTED'
 }
+
+// Thời gian lưu trong thùng rác (30 ngày)
+export const BOARD_TRASH_TTL_SECONDS = 30 * 24 * 60 * 60 // 30 ngày

@@ -1,5 +1,5 @@
 import 'dotenv/config'
-
+import { createAllTTLIndexes } from './createIndexs'
 const {
   MongoClient
 } = require('mongodb')
@@ -16,7 +16,10 @@ const dbName = process.env.DATABASE_NAME
 export const Connect_DB = async () => {
   await client.connect()
   db = client.db(dbName)
+
+  await createAllTTLIndexes()
 }
+
 export const Close_DB = async () => {
   await client.close()
 }

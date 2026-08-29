@@ -20,6 +20,7 @@ import {
 import {
   pagingSkipValue
 } from '~/utils/algorithms'
+import { createIndexes } from '~/config/createIndexs'
 const INVALID_UPDATE_FIELDS = ['_id', 'createdAt']
 const COLUMN_COLLECTION_NAME = 'columns'
 const CARD_COLLECTION_NAME = 'cards'
@@ -43,6 +44,7 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
     .max(256)
     .trim()
     .strict(),
+  cover: Joi.string().default(null),
   isFavorite: Joi.boolean().default(false),
   type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE).required(),
   columnOrderIds: Joi.array().items(Joi.string()).default([]),
@@ -50,6 +52,7 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   memberIds: Joi.array().items(Joi.string()).default([]),
   createdAt: Joi.date().default(Date.now),
   updatedAt: Joi.date().default(Date.now),
+  deletedAt: Joi.date().default(null),
   _destroy: Joi.boolean().default(false)
 
 })
@@ -216,9 +219,10 @@ const updateBoard = async (boardId, updateData) => {
 }
 const getBoards = async (userId, page, itemperpage, queryFilter) => {
   try {
+    const isTrash = queryFilter?.type === 'trash'
     const queryConditons = [
       {
-        _destroy: false
+        _destroy: isTrash ? true : false
       },
       {
         $or: [
@@ -409,6 +413,30 @@ const deleteBoard = async (boardId) => {
     throw new Error(error)
   }
 }
+const archiveBoard = async (boardId, dataUpdate) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(boardId) },
+      { $set: dataUpdate },
+      { returnDocument: 'after' }
+    )
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+const undoBoard = async (boardId, dataUpdate) => {
+  try {
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(boardId) },
+      { $set: dataUpdate },
+      { returnDocument: 'after' }
+    )
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
@@ -419,5 +447,7 @@ export const boardModel = {
   pushColumnOrderIds,
   updateBoard,
   getBoards,
-  deleteBoard
+  deleteBoard,
+  archiveBoard,
+  undoBoard
 }

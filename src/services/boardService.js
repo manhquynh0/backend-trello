@@ -25,6 +25,7 @@ import {
 import {
   redisHelper
 } from '~/helpers/redisHelper'
+import { CloudinaryProvider } from '~/providers/CloudinaryProvider'
 const dragTimers = new Map()
 const createNew = async (userId, reqBody) => {
   // eslint-disable-next-line no-useless-catch
@@ -73,7 +74,7 @@ const getDetails = async (userId, boardId) => {
     throw error
   }
 }
-const updateBoard = async (boardId, reqBody) => {
+const updateBoard = async (boardId, reqBody, boardCoverFile) => {
   // eslint-disable-next-line no-useless-catch
   try {
     const key = `board:${boardId}`
@@ -81,7 +82,15 @@ const updateBoard = async (boardId, reqBody) => {
       ...reqBody,
       updatedAt: Date.now()
     }
-    const updateBoard = await boardModel.updateBoard(boardId, updateData)
+    let updateBoard = {}
+    if (boardCoverFile) {
+      const uploadResult = await CloudinaryProvider.streamUpload(boardCoverFile.buffer, 'board-covers')
+      updateBoard = await boardModel.updateBoard(boardId, {
+        cover: uploadResult.secure_url
+      })
+
+    }
+    updateBoard = await boardModel.updateBoard(boardId, updateData)
 
     // Xóa cache chi tiết Board và danh sách Boards để cập nhật dữ liệu mới nhất (ví dụ: isFavorite, title...)
     await redisHelper.del(key)
@@ -200,11 +209,53 @@ const deleteBoard = async (boardId) => {
     throw error
   }
 }
+const archiveBoard = async (boardId) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const board = await boardModel.findOneById(boardId)
+    if (!board) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Board Not Found')
+    }
+    const dataUpdate = {
+      _destroy: true,
+      deletedAt: Date.now(),
+      updatedAt: Date.now()
+    }
+    const archiveBoard = await boardModel.archiveBoard(boardId, dataUpdate)
+    await redisHelper.delByPattern('boards:*')
+    await redisHelper.del('boards')
+    return archiveBoard
+  } catch (error) {
+    throw error
+  }
+}
+const undoBoard = async (boardId) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const board = await boardModel.findOneById(boardId)
+    if (!board) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Board Not Found')
+    }
+    const dataUpdate = {
+      _destroy: false,
+      deletedAt: null,
+      updatedAt: Date.now()
+    }
+    const undoBoard = await boardModel.undoBoard(boardId, dataUpdate)
+    await redisHelper.delByPattern('boards:*')
+    await redisHelper.del('boards')
+    return undoBoard
+  } catch (error) {
+    throw error
+  }
+}
 export const boardService = {
   createNew,
   getDetails,
   updateBoard,
   movingCard,
   getBoards,
-  deleteBoard
+  deleteBoard,
+  archiveBoard,
+  undoBoard
 }

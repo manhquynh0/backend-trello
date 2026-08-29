@@ -26,8 +26,9 @@ const getDetails = async (req, res, next) => {
 }
 const updateBoard = async (req, res, next) => {
   try {
+    const boardCoverFile = req.file
     const boardId = req.params.id
-    const updateBoard = await boardService.updateBoard(boardId, req.body)
+    const updateBoard = await boardService.updateBoard(boardId, req.body, boardCoverFile)
     res.status(StatusCodes.OK).json(updateBoard)
   } catch (error) {
     next(error)
@@ -61,9 +62,26 @@ const getBoards = async (req, res, next) => {
 const deleteBoard = async (req, res, next) => {
   try {
     const boardId = req.params.id
-    console.log(boardId)
     const deleteBoard = await boardService.deleteBoard(boardId)
     res.status(StatusCodes.OK).json(deleteBoard)
+  } catch (error) {
+    next(error)
+  }
+}
+const archiveBoard = async (req, res, next) => {
+  try {
+    const boardId = req.params.id
+    const archiveBoard = await boardService.archiveBoard(boardId)
+    res.status(StatusCodes.OK).json(archiveBoard)
+  } catch (error) {
+    next(error)
+  }
+}
+const undoBoard = async (req, res, next) => {
+  try {
+    const boardId = req.params.id
+    const undoBoard = await boardService.undoBoard(boardId)
+    res.status(StatusCodes.OK).json(undoBoard)
   } catch (error) {
     next(error)
   }
@@ -74,5 +92,7 @@ export const boardController = {
   updateBoard,
   movingCard,
   getBoards,
-  deleteBoard
+  deleteBoard,
+  archiveBoard,
+  undoBoard
 }

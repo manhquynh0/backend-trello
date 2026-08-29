@@ -7,6 +7,10 @@ export const roles = {
 }
 // Định nghĩa các quyền của user
 export const permission = {
+  UPDATE_BOARD: 'update_board',
+  ARCHIVE_BOARD: 'archive_board',
+  RESTORE_BOARD: 'restore_board',
+  DELETE_BOARD: 'delete_board',
   UPDATE_COLUMN: 'update_column',
   DELETE_COLUMN: 'delete_column',
   UPDATE_CARD: 'update_card',
