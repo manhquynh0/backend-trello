@@ -28,4 +28,11 @@ Router.route('/:id/attachments')
   .post(authMiddleware.isAuthorized, cardValidations.createdAttachment, cardController.createdAttachment)
 Router.route('/:cardId/attachments/:publicId(*)')
   .delete(authMiddleware.isAuthorized, cardController.deleteAttachment)
+Router.route('/:id/labels')
+  .get(authMiddleware.isAuthorized, cardController.getLabels)
+  .post(authMiddleware.isAuthorized, cardValidations.createdLabel, cardController.createdLabel)
+// .delete(authMiddleware.isAuthorized, cardController.deletedLabel)
+Router.route('/:id/labels/:labelId')
+  .put(authMiddleware.isAuthorized, cardValidations.updateLabel, cardController.updateLabel)
+
 export default Router

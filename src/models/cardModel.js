@@ -37,6 +37,12 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
     userDisplayName: Joi.string()
 
   }).default([]),
+  labels: Joi.array().items({
+    _id: Joi.string().required(),
+    name: Joi.string().required(),
+    color: Joi.string().required(),
+    isActive: Joi.boolean().default(false)
+  }).default([]),
   comments: Joi.array().items({
     userId: Joi.string()
       .pattern(OBJECT_ID_RULE)
@@ -73,7 +79,13 @@ const createNew = async (data) => {
     const newAddCard = {
       ...validatedData,
       columnId: new ObjectId(validatedData.columnId),
-      boardId: new ObjectId(validatedData.boardId)
+      boardId: new ObjectId(validatedData.boardId),
+      labels: validatedData.labels.map(label => {
+        return {
+          ...label,
+          _id: new ObjectId()
+        }
+      })
     }
     const createdcard = await GET_DB().collection(CARD_COLLECTION_NAME).insertOne(newAddCard)
     return createdcard
@@ -217,7 +229,9 @@ const deleteAttachment = async (cardId, attachmentId) => {
 const archivedCard = async (cardId) => {
   try {
     const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
-      { _id: new ObjectId(cardId) },
+      {
+        _id: new ObjectId(cardId)
+      },
       { $set: { _destroy: true } },
       { returnDocument: 'after' }
     )
@@ -227,6 +241,82 @@ const archivedCard = async (cardId) => {
   }
 }
 
+const createdLabel = async (cardId, labelData) => {
+  try {
+    // Thêm label vào cuối mảng labels
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(cardId) },
+      { $push: { labels: labelData } },
+      { returnDocument: 'after' }
+    )
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+const updateLabel = async (cardId, labelId, data) => {
+  try {
+    const updateData = {}
+
+    if (data.name !== undefined) {
+      updateData['labels.$.name'] = data.name
+    }
+
+    if (data.color !== undefined) {
+      updateData['labels.$.color'] = data.color
+    }
+
+    if (data.isActive !== undefined) {
+      updateData['labels.$.isActive'] = data.isActive
+    }
+
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      {
+        _id: new ObjectId(cardId),
+        'labels._id': new ObjectId(labelId)
+      },
+      {
+        $set: updateData
+      },
+      { returnDocument: 'after' }
+    )
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+const getLabels = async (cardId, filterStage) => {
+  try {
+    // Bước 1: Lấy tên cần lọc ra từ filterStage (nếu có)
+    const filterName = filterStage?.name || filterStage?.['q[name]'] || filterStage?.q?.name
+
+    // Bước 2: Tìm card theo id, chỉ lấy field "labels" cho nhẹ
+    const card = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .findOne(
+        { _id: new ObjectId(cardId) },
+        { $project: { labels: 1 } }
+      )
+
+    // Bước 3: Nếu không tìm thấy card, trả về mảng rỗng
+    const allLabels = card?.labels || []
+
+    // Bước 4: Nếu không có filterName thì trả về hết luôn
+    if (!filterName) {
+      return { labels: allLabels }
+    }
+
+    // Bước 5: Lọc bằng JavaScript thuần, không phân biệt hoa/thường
+    const filteredLabels = allLabels.filter(label =>
+      label?.name?.toLowerCase().includes(filterName.toLowerCase())
+    )
+
+    return { labels: filteredLabels }
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 export const cardModel = {
   createNew,
   findOneById,
@@ -238,5 +328,8 @@ export const cardModel = {
   updateMembers,
   getDetails,
   deleteAttachment,
-  archivedCard
+  archivedCard,
+  createdLabel,
+  updateLabel,
+  getLabels
 }
