@@ -44,9 +44,30 @@ const deleteAttachment = async (req, res, next) => {
     next(error)
   }
 }
+const createdAttachment = async (req, res, next) => {
+  try {
+    const cardId = req.params.id
+    const userInfor = req.jwtDecoded
+    const updated = await cardService.createdAttachment(cardId, req.body, userInfor)
+    res.status(StatusCodes.CREATED).json(updated)
+  } catch (error) {
+    next(error)
+  }
+}
+const archivedCard = async (req, res, next) => {
+  try {
+    const cardId = req.params.id
+    const updatedCard = await cardService.archivedCard(cardId)
+    res.status(StatusCodes.OK).json(updatedCard)
+  } catch (error) {
+    next(error)
+  }
+}
 export const cardController = {
   createdNew,
   getDetails,
   updated,
-  deleteAttachment
+  deleteAttachment,
+  createdAttachment,
+  archivedCard
 }

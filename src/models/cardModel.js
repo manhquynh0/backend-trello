@@ -27,7 +27,7 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
   attachments: Joi.array().items({
     publicId: Joi.string().optional(),
     url: Joi.string().required(),
-    filetype: Joi.string().required(),
+    filetype: Joi.string().required().optional(),
     name: Joi.string().optional(),
     createdAt: Joi.date().timestamp('javascript').default(null),
     userId: Joi.string()
@@ -94,14 +94,6 @@ const findOneById = async (id) => {
 }
 const updatedCard = async (cardId, updateData) => {
   try {
-    if (updateData.attachments) {
-      updateData.attachments = updateData.attachments.map(
-        attachment => ({
-          ...attachment,
-          _id: new ObjectId(attachment._id)
-        })
-      )
-    }
     Object.keys(updateData).forEach(fieldName => {
       if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
         delete updateData[fieldName]
@@ -222,6 +214,18 @@ const deleteAttachment = async (cardId, attachmentId) => {
     throw new Error(error)
   }
 }
+const archivedCard = async (cardId) => {
+  try {
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(cardId) },
+      { $set: { _destroy: true } },
+      { returnDocument: 'after' }
+    )
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 
 export const cardModel = {
   createNew,
@@ -233,5 +237,6 @@ export const cardModel = {
   unshiftAttachment,
   updateMembers,
   getDetails,
-  deleteAttachment
+  deleteAttachment,
+  archivedCard
 }

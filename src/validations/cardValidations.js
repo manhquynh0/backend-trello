@@ -41,7 +41,35 @@ const updated = async (req, res, next) => {
   try {
     await correctCondition.validateAsync(req.body, {
       abortEarly: false,
-      allowUnknown : true
+      allowUnknown: true
+    })
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message
+    const customError = new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errorMessage)
+    next(customError)
+  }
+}
+const createdAttachment = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    attachments: Joi.array().items({
+      publicId: Joi.string().optional(),
+      url: Joi.string().required(),
+      filetype: Joi.string().required(),
+      name: Joi.string().optional(),
+      createdAt: Joi.date().timestamp('javascript').default(null),
+      userId: Joi.string()
+        .pattern(OBJECT_ID_RULE)
+        .message(OBJECT_ID_RULE_MESSAGE),
+      userAvatar: Joi.string(),
+      userDisplayName: Joi.string()
+
+    }).default([])
+  })
+  try {
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true
     })
     next()
   } catch (error) {
@@ -52,5 +80,6 @@ const updated = async (req, res, next) => {
 }
 export const cardValidations = {
   createdNew,
-  updated
+  updated,
+  createdAttachment
 }

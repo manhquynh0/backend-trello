@@ -23,6 +23,9 @@ Router.route('/:id')
     multerUploadMiddleware.upload.fields([{ name: 'cardCover', maxCount: 1 }, { name: 'attachments', maxCount: 10 }]),
     cardValidations.updated,
     cardController.updated)
+  .patch(authMiddleware.isAuthorized, cardController.archivedCard)
+Router.route('/:id/attachments')
+  .post(authMiddleware.isAuthorized, cardValidations.createdAttachment, cardController.createdAttachment)
 Router.route('/:cardId/attachments/:publicId(*)')
   .delete(authMiddleware.isAuthorized, cardController.deleteAttachment)
 export default Router

@@ -120,7 +120,14 @@ const getDetails = async (userId, boardId) => {
           from: columnModel.COLUMN_COLLECTION_NAME,
           localField: '_id',
           foreignField: 'boardId',
-          as: 'columns' // tự động sinh ra
+          as: 'columns',
+          pipeline: [
+            {
+              $match: {
+                _destroy: false
+              }
+            }
+          ]
         }
       },
       {
@@ -128,7 +135,14 @@ const getDetails = async (userId, boardId) => {
           from: cardModel.CARD_COLLECTION_NAME,
           localField: '_id',
           foreignField: 'boardId',
-          as: 'cards'
+          as: 'cards',
+          pipeline: [
+            {
+              $match: {
+                _destroy: false
+              }
+            }
+          ]
         }
       },
       {

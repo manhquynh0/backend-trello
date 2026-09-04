@@ -13,7 +13,7 @@ import {
 } from '~/providers/CloudinaryProvider'
 import { redisHelper } from '~/helpers/redisHelper'
 import { userModel } from '~/models/userModel'
-import { ObjectId } from 'mongodb'
+import { v4 as uuid } from 'uuid'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -97,7 +97,6 @@ const updatedCard = async (cardId, reqBody, cardCoverFile, attachmentsFiles, use
       updateCard = await cardModel.updateMembers(cardId, updateData.incomingMemberInfo)
 
     } else {
-
       updateCard = await cardModel.updatedCard(cardId, updateData)
     }
     await redisHelper.del(key)
@@ -122,10 +121,51 @@ const deleteAttachment = async (cardId, attachmentId) => {
     throw error
   }
 }
+const createdAttachment = async (cardId, reqBody, userInfor) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const attachment = {
+      ...reqBody.attachments[0]
+    }
 
+    const currentUser = await userModel.findOneById(userInfor._id)
+
+    const attachmentData = {
+      ...attachment,
+      publicId: uuid(),
+      url: attachment.url,
+      filetype: attachment.filetype,
+      name: attachment.name,
+      createdAt: Date.now(),
+      userId: userInfor._id,
+      userAvatar: currentUser?.avatar,
+      userDisplayName: currentUser?.displayName
+    }
+    const createdAttachment = await cardModel.unshiftAttachment(cardId, attachmentData)
+    await redisHelper.del(`card:${cardId}`)
+    return createdAttachment
+  } catch (error) {
+    throw error
+  }
+}
+const archivedCard = async (cardId) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const result = await cardModel.archivedCard(cardId)
+    if (!result) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Attachment Not Found!')
+    }
+    await redisHelper.del(`card:${cardId}`)
+    return result
+  } catch (error) {
+    throw error
+  }
+}
 export const cardService = {
   createNew,
   getDetails,
   updatedCard,
-  deleteAttachment
+  deleteAttachment,
+  createdAttachment,
+  archivedCard
 }
