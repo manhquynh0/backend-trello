@@ -1,6 +1,5 @@
 /* eslint-disable no-useless-catch */
 import Jwt from 'jsonwebtoken'
-require('dotenv').config()
 const generateToken = (userInfor, secretSignature, tokenLife) => {
   try {
     return Jwt.sign(userInfor, secretSignature, {

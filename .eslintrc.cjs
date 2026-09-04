@@ -32,5 +32,12 @@ module.exports = {
     'comma-dangle': 1,
     'comma-spacing': 1,
     'arrow-spacing': 1
-  }
+  },
+  overrides: [
+    {
+      // Áp dụng env jest chỉ cho các file test, tránh ảnh hưởng toàn dự án
+      files: ['src/tests/**/*.js'],
+      env: { jest: true }
+    }
+  ]
 }

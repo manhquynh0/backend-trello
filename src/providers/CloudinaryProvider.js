@@ -10,7 +10,7 @@ cloudinaryV2.config({
 })
 const streamUpload = (fileBuffer, folderName) => {
   return new Promise((resolve, reject) => {
-    const stream = cloudinaryV2.uploader.upload_stream({ folder: folderName }, (err, result) => {
+    const stream = cloudinaryV2.uploader.upload_stream({ folder: folderName, resource_type: 'auto' }, (err, result) => {
       if (err) return reject(err)
       resolve(result)
     })

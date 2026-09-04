@@ -12,6 +12,8 @@ import {
   CloudinaryProvider
 } from '~/providers/CloudinaryProvider'
 import { redisHelper } from '~/helpers/redisHelper'
+import { userModel } from '~/models/userModel'
+import { ObjectId } from 'mongodb'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -51,7 +53,7 @@ const getDetails = async (cardId) => {
     throw error
   }
 }
-const updatedCard = async (cardId, reqBody, cardCoverFile, userInfor) => {
+const updatedCard = async (cardId, reqBody, cardCoverFile, attachmentsFiles, userInfor) => {
   // eslint-disable-next-line no-useless-catch
   try {
     const key = `card:${cardId}`
@@ -59,12 +61,28 @@ const updatedCard = async (cardId, reqBody, cardCoverFile, userInfor) => {
       ...reqBody,
       updatedAt: Date.now()
     }
+    const currentUser = await userModel.findOneById(userInfor._id)
     let updateCard = {}
     if (cardCoverFile) {
       const uploadResult = await CloudinaryProvider.streamUpload(cardCoverFile.buffer, 'card-covers')
       updateCard = await cardModel.updatedCard(cardId, {
         cover: uploadResult.secure_url
       })
+
+    } else if (attachmentsFiles) {
+      const uploadResult = await CloudinaryProvider.streamUpload(attachmentsFiles.buffer, 'attachments')
+
+      const attachmentData = {
+        publicId: uploadResult.public_id,
+        url: uploadResult.secure_url,
+        filetype: attachmentsFiles.mimetype,
+        name: attachmentsFiles.originalname,
+        createdAt: Date.now(),
+        userId: userInfor._id,
+        userAvatar: currentUser?.avatar,
+        userDisplayName: currentUser?.displayName
+      }
+      updateCard = await cardModel.unshiftAttachment(cardId, attachmentData)
 
     } else if (updateData.commentToAdd) {
       const commentData = {
@@ -79,6 +97,7 @@ const updatedCard = async (cardId, reqBody, cardCoverFile, userInfor) => {
       updateCard = await cardModel.updateMembers(cardId, updateData.incomingMemberInfo)
 
     } else {
+
       updateCard = await cardModel.updatedCard(cardId, updateData)
     }
     await redisHelper.del(key)
@@ -88,8 +107,25 @@ const updatedCard = async (cardId, reqBody, cardCoverFile, userInfor) => {
     throw error
   }
 }
+
+const deleteAttachment = async (cardId, attachmentId) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const result = await cardModel.deleteAttachment(cardId, attachmentId)
+    if (!result) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Attachment Not Found!')
+    }
+    // await CloudinaryProvider.destroy(attachmentId)
+    await redisHelper.del(`card:${cardId}`)
+    return result
+  } catch (error) {
+    throw error
+  }
+}
+
 export const cardService = {
   createNew,
   getDetails,
-  updatedCard
+  updatedCard,
+  deleteAttachment
 }

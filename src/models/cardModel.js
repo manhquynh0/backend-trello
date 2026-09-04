@@ -24,6 +24,19 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
   title: Joi.string().required().min(3).max(50).trim().strict(),
   cover: Joi.string().default(null),
   memberIds: Joi.array().items(Joi.string()).default([]),
+  attachments: Joi.array().items({
+    publicId: Joi.string().optional(),
+    url: Joi.string().required(),
+    filetype: Joi.string().required(),
+    name: Joi.string().optional(),
+    createdAt: Joi.date().timestamp('javascript').default(null),
+    userId: Joi.string()
+      .pattern(OBJECT_ID_RULE)
+      .message(OBJECT_ID_RULE_MESSAGE),
+    userAvatar: Joi.string(),
+    userDisplayName: Joi.string()
+
+  }).default([]),
   comments: Joi.array().items({
     userId: Joi.string()
       .pattern(OBJECT_ID_RULE)
@@ -81,6 +94,14 @@ const findOneById = async (id) => {
 }
 const updatedCard = async (cardId, updateData) => {
   try {
+    if (updateData.attachments) {
+      updateData.attachments = updateData.attachments.map(
+        attachment => ({
+          ...attachment,
+          _id: new ObjectId(attachment._id)
+        })
+      )
+    }
     Object.keys(updateData).forEach(fieldName => {
       if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
         delete updateData[fieldName]
@@ -111,6 +132,26 @@ const unshiftComment = async (cardId, commentData) => {
         }
       }
 
+    }, {
+      returnDocument: 'after'
+    })
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+const unshiftAttachment = async (cardId, attachmentData) => {
+  try {
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate({
+      _id: new ObjectId(cardId)
+    }, {
+      $push: {
+        attachments: {
+          $each: [attachmentData],
+          $position: 0
+        }
+      }
     }, {
       returnDocument: 'after'
     })
@@ -167,6 +208,21 @@ const getDetails = async (cardId) => {
   }
 }
 
+const deleteAttachment = async (cardId, attachmentId) => {
+  try {
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      {
+        _id: new ObjectId(cardId)
+      },
+      { $pull: { attachments: { publicId: attachmentId } } },
+      { returnDocument: 'after' }
+    )
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const cardModel = {
   createNew,
   findOneById,
@@ -174,6 +230,8 @@ export const cardModel = {
   CARD_COLLECTION_SCHEMA,
   updatedCard,
   unshiftComment,
+  unshiftAttachment,
   updateMembers,
-  getDetails
+  getDetails,
+  deleteAttachment
 }

@@ -5,17 +5,25 @@ import {
 } from 'http-status-codes'
 import {
   LIMIT_COMMON_FILE_SIZE,
-  ALLOW_COMMON_FILE_SIZE
+  ALLOW_COMMON_FILE_SIZE,
+  ALLOW_UPLOAD_FILE_TYPE
 } from '~/utils/validators'
 const customFileFilter = (req, file, callback) => {
-
-  if (!ALLOW_COMMON_FILE_SIZE.includes(file.mimetype)) {
-    const errMessage = 'File type is invalid, Only accept jpg, png or jpeg'
-    return callback(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errMessage), null)
+  if (file.fieldname.toLowerCase().includes('cover')) {
+    if (!ALLOW_COMMON_FILE_SIZE.includes(file.mimetype)) {
+      const errMessage = 'File type is invalid, Only accept jpg, png or jpeg'
+      return callback(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errMessage), null)
+    }
+    return callback(null, true)
   }
-  return callback(null, true)
+  else {
+    if (!ALLOW_UPLOAD_FILE_TYPE.includes(file.mimetype)) {
+      const errMessage = 'File type is invalid, Only accept jpg, png, jpeg, pdf, doc, docx, xls, xlsx, zip'
+      return callback(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errMessage), null)
+    }
+    return callback(null, true)
+  }
 }
-
 // khoi tao function upload dc boc boi multer
 
 const upload = multer({
