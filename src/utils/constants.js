@@ -19,6 +19,15 @@ export const BOARD_INVITATION_STATUS = {
   ACCEPTED: 'ACCEPTED',
   REJECTED: 'REJECTED'
 }
-
+export const DEFAULT_LABELS = [
+  { name: 'Lỗi', color: '#EF4444' },
+  { name: 'Tính năng', color: '#F97316' },
+  { name: 'Đang thực hiện', color: '#EAB308' },
+  { name: 'Hoàn thành', color: '#22C55E' },
+  { name: 'Ưu tiên thấp', color: '#3B82F6' },
+  { name: 'Ưu tiên cao', color: '#A855F7' },
+  { name: 'Thiết kế', color: '#EC4899' },
+  { name: 'Nghiên cứu', color: '#6B7280' }
+]
 // Thời gian lưu trong thùng rác (30 ngày)
 export const BOARD_TRASH_TTL_SECONDS = 30 * 24 * 60 * 60 // 30 ngày

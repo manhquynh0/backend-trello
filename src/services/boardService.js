@@ -30,9 +30,10 @@ const dragTimers = new Map()
 const createNew = async (userId, reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
+
     const newBoard = {
       ...reqBody,
-      slug: slugify(reqBody.title)
+      slug: slugify(reqBody.title),
     }
     const createdBoard = await boardModel.createNew(userId, newBoard)
 
@@ -93,9 +94,7 @@ const updateBoard = async (boardId, reqBody, boardCoverFile) => {
     updateBoard = await boardModel.updateBoard(boardId, updateData)
 
     // Xóa cache chi tiết Board và danh sách Boards để cập nhật dữ liệu mới nhất (ví dụ: isFavorite, title...)
-    await redisHelper.del(key)
     await redisHelper.delByPattern('boards:*')
-    await redisHelper.del('boards')
 
     return updateBoard
   } catch (error) {

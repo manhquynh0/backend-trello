@@ -78,8 +78,46 @@ const createdAttachment = async (req, res, next) => {
     next(customError)
   }
 }
+const createdLabel = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    labels: Joi.array().items({
+      name: Joi.string().required(),
+      color: Joi.string().required()
+    }).default([])
+  })
+  try {
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true
+    })
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message
+    const customError = new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errorMessage)
+    next(customError)
+  }
+}
+const updateLabel = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    name: Joi.string(),
+    color: Joi.string()
+  })
+  try {
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true
+    })
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message
+    const customError = new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errorMessage)
+    next(customError)
+  }
+}
 export const cardValidations = {
   createdNew,
   updated,
-  createdAttachment
+  createdAttachment,
+  createdLabel,
+  updateLabel
 }

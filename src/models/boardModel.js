@@ -20,7 +20,6 @@ import {
 import {
   pagingSkipValue
 } from '~/utils/algorithms'
-import { createIndexes } from '~/config/createIndexs'
 const INVALID_UPDATE_FIELDS = ['_id', 'createdAt']
 const COLUMN_COLLECTION_NAME = 'columns'
 const CARD_COLLECTION_NAME = 'cards'
