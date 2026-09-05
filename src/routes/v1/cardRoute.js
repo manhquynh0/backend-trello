@@ -34,5 +34,10 @@ Router.route('/:id/labels')
 // .delete(authMiddleware.isAuthorized, cardController.deletedLabel)
 Router.route('/:id/labels/:labelId')
   .put(authMiddleware.isAuthorized, cardValidations.updateLabel, cardController.updateLabel)
+Router.route('/:id/checklist')
+  .post(authMiddleware.isAuthorized, cardValidations.createdChecklist, cardController.createdChecklist)
+Router.route('/:id/checklist/:checklistId')
+  .post(authMiddleware.isAuthorized, cardValidations.createdChecklistItem, cardController.createdChecklistItem)
+
 
 export default Router

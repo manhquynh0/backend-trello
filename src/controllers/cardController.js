@@ -101,6 +101,25 @@ const updateLabel = async (req, res, next) => {
     next(error)
   }
 }
+const createdChecklist = async (req, res, next) => {
+  try {
+    const cardId = req.params.id
+    const updated = await cardService.createdChecklist(cardId, req.body)
+    res.status(StatusCodes.CREATED).json(updated)
+  } catch (error) {
+    next(error)
+  }
+}
+const createdChecklistItem = async (req, res, next) => {
+  try {
+    const cardId = req.params.id
+    const checklistId = req.params.checklistId
+    const updated = await cardService.createdChecklistItem(cardId, checklistId, req.body)
+    res.status(StatusCodes.CREATED).json(updated)
+  } catch (error) {
+    next(error)
+  }
+}
 export const cardController = {
   createdNew,
   getDetails,
@@ -111,5 +130,7 @@ export const cardController = {
   getLabels,
   createdLabel,
   deleteLabel,
-  updateLabel
+  updateLabel,
+  createdChecklist,
+  createdChecklistItem
 }
