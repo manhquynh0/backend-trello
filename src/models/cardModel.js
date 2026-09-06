@@ -28,21 +28,32 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
     publicId: Joi.string().optional(),
     url: Joi.string().required(),
     filetype: Joi.string().required().optional(),
-    name: Joi.string().optional(),
+    name: Joi.string().required().min(3).max(50).trim().strict(),
     createdAt: Joi.date().timestamp('javascript').default(null),
     userId: Joi.string()
       .pattern(OBJECT_ID_RULE)
       .message(OBJECT_ID_RULE_MESSAGE),
     userAvatar: Joi.string(),
-    userDisplayName: Joi.string()
+    userDisplayName: Joi.string().required().min(3).max(50).trim().strict()
 
   }).default([]),
   labels: Joi.array().items({
-    _id: Joi.string().required(),
-    name: Joi.string().required(),
+    _id: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    name: Joi.string().required().min(3).max(50).trim().strict(),
     color: Joi.string().required(),
     isActive: Joi.boolean().default(false)
   }).default([]),
+  checkList: Joi.array().items({
+    _id: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    name: Joi.string().required().min(3).max(50).trim().strict(),
+    isSuccess: Joi.boolean().default(false),
+    subItems : Joi.array().items({
+      _id: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+      name: Joi.string().required().min(3).max(50).trim().strict(),
+      isSuccess: Joi.boolean().default(false)
+    }).default([])
+  }).default([])
+  ,
   comments: Joi.array().items({
     userId: Joi.string()
       .pattern(OBJECT_ID_RULE)
@@ -243,10 +254,14 @@ const archivedCard = async (cardId) => {
 
 const createdLabel = async (cardId, labelData) => {
   try {
+    const data = {
+      ...labelData,
+      _id: new ObjectId()
+    }
     // Thêm label vào cuối mảng labels
     const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
       { _id: new ObjectId(cardId) },
-      { $push: { labels: labelData } },
+      { $push: { labels: data } },
       { returnDocument: 'after' }
     )
     return result || null
@@ -317,6 +332,45 @@ const getLabels = async (cardId, filterStage) => {
     throw new Error(error)
   }
 }
+const createdChecklist = async (cardId, checklistData) => {
+  try {
+    const data = {
+      ...checklistData,
+      _id: new ObjectId()
+    }
+    // Thêm label vào cuối mảng labels
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(cardId) },
+      { $push: { checkList: data } },
+      { returnDocument: 'after' }
+    )
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+const createdChecklistItem = async (cardId, checklistId, checklistItemData) => {
+  try {
+    const data = {
+      ...checklistItemData,
+      _id: new ObjectId()
+    }
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      {
+        _id: new ObjectId(cardId),
+        'checkList._id': {
+          $in: [new ObjectId(checklistId), checklistId]
+        }
+      },
+      { $push: { 'checkList.$.subItems': data } },
+      { returnDocument: 'after' }
+    )
+    return result || null
+  } catch (error) {
+    throw new Error(error)
+  }
+  
+}
 export const cardModel = {
   createNew,
   findOneById,
@@ -331,5 +385,7 @@ export const cardModel = {
   archivedCard,
   createdLabel,
   updateLabel,
-  getLabels
+  getLabels,
+  createdChecklist,
+  createdChecklistItem
 }

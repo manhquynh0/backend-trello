@@ -212,6 +212,39 @@ const getLabels = async (cardId, filterStage) => {
 
   return await cardModel.getLabels(cardId, filterStage)
 }
+const createdChecklist = async (cardId, reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const checklistData = {
+      ...reqBody,
+      isSuccess: false,
+      subItems: [],
+      _id: new ObjectId().toString()
+    }
+    const createdChecklist = await cardModel.createdChecklist(cardId, checklistData)
+    await redisHelper.del(`card:${cardId}`)
+    return createdChecklist
+  } catch (error) {
+    throw error
+  }
+}
+const createdChecklistItem = async (cardId, checklistId, reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const checklistItemData = {
+      ...reqBody,
+      _id: new ObjectId().toString()
+    }
+    const result = await cardModel.createdChecklistItem(cardId, checklistId, checklistItemData)
+    if (!result) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Card or Checklist Not Found!')
+    }
+    await redisHelper.del(`card:${cardId}`)
+    return result
+  } catch (error) {
+    throw error
+  }
+}
 export const cardService = {
   createNew,
   getDetails,
@@ -221,7 +254,7 @@ export const cardService = {
   archivedCard,
   getLabels,
   createdLabel,
-  updateLabel
-
-
+  updateLabel,
+  createdChecklist,
+  createdChecklistItem
 }
