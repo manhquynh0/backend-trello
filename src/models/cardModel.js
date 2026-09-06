@@ -369,6 +369,7 @@ const createdChecklistItem = async (cardId, checklistId, checklistItemData) => {
   } catch (error) {
     throw new Error(error)
   }
+  
 }
 export const cardModel = {
   createNew,
