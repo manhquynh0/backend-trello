@@ -25,6 +25,9 @@ Router.route('/:id')
   .delete(authMiddleware.isAuthorized, boardController.deleteBoard)
   .patch(authMiddleware.isAuthorized, boardController.archiveBoard)
 
+Router.route('/:id/cards')
+  .get(authMiddleware.isAuthorized, boardController.getFilteredDetails)
+
 Router.route('/:id/undodelete')
   .patch(authMiddleware.isAuthorized, boardController.undoBoard)
 

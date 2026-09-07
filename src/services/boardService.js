@@ -78,7 +78,6 @@ const getDetails = async (userId, boardId) => {
 const updateBoard = async (boardId, reqBody, boardCoverFile) => {
   // eslint-disable-next-line no-useless-catch
   try {
-    const key = `board:${boardId}`
     const updateData = {
       ...reqBody,
       updatedAt: Date.now()
@@ -173,6 +172,58 @@ const movingCard = async (reqBody) => {
     throw error
   }
 }
+const filterCards = (cards, filters) => {
+  const search = String(filters.search || '').trim().toLowerCase()
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  return cards.filter(card => {
+    const searchableText = `${card.title || ''} ${card.description || ''}`.toLowerCase()
+    if (search && !searchableText.includes(search)) return false
+    if (filters.memberId && filters.memberId !== 'all' && !card.memberIds?.some(memberId => memberId.toString() === filters.memberId)) return false
+    if (filters.labelId && filters.labelId !== 'all' && !card.labels?.some(label => label._id.toString() === filters.labelId && label.isActive !== false)) return false
+
+    const dueDate = card.dueDate ? new Date(card.dueDate) : null
+    const dueDay = dueDate ? new Date(dueDate) : null
+    if (dueDay) dueDay.setHours(0, 0, 0, 0)
+    if (filters.dueDate === 'none' && dueDate) return false
+    if (filters.dueDate === 'overdue' && (!dueDay || dueDay >= today)) return false
+    if (filters.dueDate === 'today' && (!dueDay || dueDay.getTime() !== today.getTime())) return false
+    if (filters.dueDate === 'next7') {
+      const nextWeek = new Date(today)
+      nextWeek.setDate(nextWeek.getDate() + 7)
+      if (!dueDay || dueDay < today || dueDay > nextWeek) return false
+    }
+
+    const checklists = card.checkList || []
+    const checklistItems = checklists.flatMap(checklist => checklist.subItems || [])
+    const isChecklistComplete = checklistItems.length > 0 && checklistItems.every(item => item.isSuccess)
+    if (filters.checklist === 'with' && checklists.length === 0) return false
+    if (filters.checklist === 'without' && checklists.length > 0) return false
+    if (filters.checklist === 'completed' && !isChecklistComplete) return false
+    if (filters.checklist === 'incomplete' && (checklistItems.length === 0 || isChecklistComplete)) return false
+
+    const hasAttachments = (card.attachments || []).length > 0
+    if (filters.attachments === 'with' && !hasAttachments) return false
+    if (filters.attachments === 'without' && hasAttachments) return false
+    return true
+  })
+}
+
+const getFilteredDetails = async (userId, boardId, filters) => {
+  const board = await getDetails(userId, boardId)
+  const filteredBoard = cloneDeep(board)
+  filteredBoard.columns = filteredBoard.columns.map(column => {
+    const cards = filterCards(column.cards || [], filters)
+    return {
+      ...column,
+      cards,
+      cardOrderIds: column.cardOrderIds.filter(cardId => cards.some(card => card._id.toString() === cardId.toString()))
+    }
+  })
+  return filteredBoard
+}
+
 const getBoards = async (userID, page, itemperpage, queryFilter) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -251,6 +302,7 @@ const undoBoard = async (boardId) => {
 export const boardService = {
   createNew,
   getDetails,
+  getFilteredDetails,
   updateBoard,
   movingCard,
   getBoards,
