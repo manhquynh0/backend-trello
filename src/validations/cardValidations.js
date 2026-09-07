@@ -99,7 +99,7 @@ const createdLabel = async (req, res, next) => {
 }
 const updateLabel = async (req, res, next) => {
   const correctCondition = Joi.object({
-    name: Joi.string().required().min(3).max(50).trim().strict(),
+    name: Joi.string().min(3).max(50).trim().strict(),
     color: Joi.string()
   })
   try {
@@ -116,7 +116,7 @@ const updateLabel = async (req, res, next) => {
 }
 const createdChecklist = async (req, res, next) => {
   const correctCondition = Joi.object({
-    name: Joi.string().required().min(3).max(50).trim().strict(),
+    name: Joi.string().required().min(3).max(50).trim().strict()
   })
   try {
     await correctCondition.validateAsync(req.body, {

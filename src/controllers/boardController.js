@@ -24,6 +24,14 @@ const getDetails = async (req, res, next) => {
     next(error)
   }
 }
+const getFilteredDetails = async (req, res, next) => {
+  try {
+    const board = await boardService.getFilteredDetails(req.jwtDecoded._id, req.params.id, req.query)
+    res.status(StatusCodes.OK).json(board)
+  } catch (error) {
+    next(error)
+  }
+}
 const updateBoard = async (req, res, next) => {
   try {
     const boardCoverFile = req.file
@@ -94,5 +102,6 @@ export const boardController = {
   getBoards,
   deleteBoard,
   archiveBoard,
-  undoBoard
+  undoBoard,
+  getFilteredDetails
 }

@@ -35,7 +35,6 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
       .message(OBJECT_ID_RULE_MESSAGE),
     userAvatar: Joi.string(),
     userDisplayName: Joi.string().required().min(3).max(50).trim().strict()
-
   }).default([]),
   labels: Joi.array().items({
     _id: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
@@ -74,7 +73,8 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
     commentedAt: Joi.date().timestamp()
   }).default([]),
   description: Joi.string().optional(),
-
+  startDate :Joi.date().timestamp('javascript').default(null),
+  dueDate :Joi.date().timestamp('javascript').default(null),
   createdAt: Joi.date().timestamp('javascript').default(Date.now),
   updatedAt: Joi.date().timestamp('javascript').default(null),
   _destroy: Joi.boolean().default(false)
@@ -369,7 +369,6 @@ const createdChecklistItem = async (cardId, checklistId, checklistItemData) => {
   } catch (error) {
     throw new Error(error)
   }
-  
 }
 export const cardModel = {
   createNew,
