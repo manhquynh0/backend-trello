@@ -16,12 +16,12 @@ if (shouldMuteConsole) {
   })
   // sau mỗi lần test
   afterEach(() => {
-    jest.clearAllMocks()  // xóa lịch sử cuộc gọi của các mock ( calls/ result / instance)
+    jest.clearAllMocks() // xóa lịch sử cuộc gọi của các mock ( calls/ result / instance)
     jest.restoreAllMocks() // trả spyOn về implementation gốc
   })
 
   // Nếu dự án dùng fake timers jest.useFakeTimers() thì mở đoạn code này để không ảnh hưởng tới các tests khác nhau
   // afterAll(() => {
-  //   jest.useRealTimers()  
+  //   jest.useRealTimers()
   // })
 }

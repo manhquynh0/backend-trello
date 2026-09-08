@@ -1,7 +1,7 @@
 
 /* eslint-disable no-unused-vars */
 import { StatusCodes } from 'http-status-codes'
-require('dotenv').config()
+import 'dotenv/config'
 
 // Middleware xử lý lỗi tập trung trong ứng dụng Back-end NodeJS (ExpressJS)
 export const errorHandlingMiddleware = (err, req, res, next) => {
