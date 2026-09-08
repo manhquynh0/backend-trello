@@ -6,5 +6,6 @@ module.exports = {
   },
   collectCoverageFrom: ['src/**/*.{js,jsx}', '!src/**/index.js'], // thu thập coverage
 
+  setupFiles: ['<rootDir>/src/tests/jest.env.js'],
   setupFilesAfterEnv: ['<rootDir>/src/tests/jest.setup.js'] // file được chạy sau khi setup jest
 }

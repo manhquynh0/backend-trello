@@ -1,17 +1,12 @@
 /* eslint-disable no-console */
-import express from 'express'
-import cors from 'cors'
+import createApp from './app'
 import {
   corsOptions
 } from '~/config/cors'
 import {
   Connect_DB
 } from '~/config/database'
-import APIs_v1 from '~/routes/v1'
-import {
-  errorHandlingMiddleware
-} from '~/middlewares/errorHandlingMiddleware'
-import cookie from 'cookie-parser'
+import 'dotenv/config'
 import http from 'http'
 import { Server } from 'socket.io'
 import { inviteUserToBoardSocket } from '~/sockets/inviteUserToBoardSocket'
@@ -19,22 +14,7 @@ import { userJoinCardSocket } from '~/sockets/userJoinCardSocket'
 import { CONNECT_REDIS } from '~/config/redis'
 import { draggingSocket } from '~/sockets/draggingSocket'
 const START_SERVER = () => {
-  const app = express()
-  app.use(cors(corsOptions))
-  app.use(cookie())
-  // fix cache from disk
-  app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store')
-    next()
-  })
-  // cho phep gui du lieu dang json
-  app.use(express.json())
-  // route v1
-  app.use('/v1', APIs_v1)
-
-  app.use(errorHandlingMiddleware)
-
-  const httpServer = http.createServer(app)
+  const httpServer = http.createServer(createApp)
   const io = new Server(httpServer, {
     cors: corsOptions
   })
@@ -46,7 +26,7 @@ const START_SERVER = () => {
   })
 
   httpServer.listen(3000, () => {
-    console.log('Server is running on http://localhost:3000')
+    console.log(`Server is running on http://${process.env.APP_HOST}:${process.env.APP_PORT}`)
   })
 }
 
