@@ -11,6 +11,8 @@
     "production": "npm run build && cross-env BUILD_MODE=prod node ./build/src/server.js",
     "dev": "cross-env BUILD_MODE=dev nodemon --exec babel-node ./src/server.js",
     "test": "jest --no-cache",
+    "test:unit": "jest src/tests/unit --no-cache",
+    "test:int": "jest src/tests/integration --runInBand --no-cache",
     "test:watch": "jest --watchAll --no-cache",
     "test:ci": "jest --ci --coverage --no-cache"
   },

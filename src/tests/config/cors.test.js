@@ -26,7 +26,7 @@ describe('corsMiddlware', () => {
       message: 'OK'
     })
   })
-  it('Forbid request when origin is in whitelist', async () => {
+  it('Forbid request when origin is not in whitelist', async () => {
     const orgin = 'http://abcxyz'
     const app = createTestApp()
     const res = await request(app).get('/test').set('Origin', orgin)

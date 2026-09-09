@@ -1,10 +1,7 @@
 import 'dotenv/config'
 import { createAllTTLIndexes } from './createIndexs'
-const {
-  MongoClient
-} = require('mongodb')
 // or as an es module:
-// import { MongoClient } from 'mongodb'
+import { MongoClient } from 'mongodb'
 let db = null
 // Connection URL
 const url = process.env.MONGODB_URI

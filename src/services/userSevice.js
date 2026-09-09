@@ -36,7 +36,7 @@ const createNew = async (reqBody) => {
     const nameFromEmail = reqBody.email.split('@')[0]
     const newUser = {
       email: reqBody.email,
-      password: bcryptjs.hashSync(reqBody.password, 8),
+      password: await bcryptjs.hashSync(reqBody.password, 8),
       userName: nameFromEmail,
       displayName: nameFromEmail,
       verifyToken: uuidv4()

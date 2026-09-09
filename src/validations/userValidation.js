@@ -11,7 +11,7 @@ const createNew = async (req, res, next) => {
   const correctCondition = Joi.object({
     email: Joi.string().required().pattern(EMAIL_RULE).message(EMAIL_RULE_MESSAGE),
     password: Joi.string().trim().required().pattern(PASSWORD_RULE).message(PASSWORD_RULE_MESSAGE),
-    avatar: Joi.string().default([]),
+    avatar: Joi.string().default(''),
     isActive: Joi.boolean().default(false),
     createdAt: Joi.date().timestamp('javascript').default(Date.now),
     updatedAt: Joi.date().timestamp('javascript').default(null)
@@ -73,7 +73,7 @@ const update = async (req, res, next) => {
   try {
     await correctCondition.validateAsync(req.body, {
       abortEarly: false,
-      allowUnknown : true
+      allowUnknown: true
     })
     next()
   } catch (error) {
