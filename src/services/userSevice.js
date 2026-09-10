@@ -36,7 +36,7 @@ const createNew = async (reqBody) => {
     const nameFromEmail = reqBody.email.split('@')[0]
     const newUser = {
       email: reqBody.email,
-      password: await bcryptjs.hashSync(reqBody.password, 8),
+      password: bcryptjs.hashSync(reqBody.password, 8),
       userName: nameFromEmail,
       displayName: nameFromEmail,
       verifyToken: uuidv4()
@@ -151,7 +151,7 @@ const update = async (userId, reqBody, userAvatarFile) => {
       if (!result) {
         throw new ApiError(
           StatusCodes.NOT_ACCEPTABLE,
-          'Email hoặc mật khẩu không đúng!'
+          'Mật khẩu hiện tại không chính xác!'
         )
       }
       updatedUser = await userModel.update(userId, {

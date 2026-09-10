@@ -25,7 +25,7 @@ const START_SERVER = () => {
     draggingSocket(socket)
   })
 
-  httpServer.listen(3000, () => {
+  httpServer.listen(process.env.APP_PORT, () => {
     console.log(`Server is running on http://${process.env.APP_HOST}:${process.env.APP_PORT}`)
   })
 }

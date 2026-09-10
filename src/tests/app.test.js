@@ -4,7 +4,7 @@ import createApp from '~/app'
 describe('createApp()', () => {
   let app
   beforeEach(() => {
-    app = createApp()
+    app = createApp
   })
 
   it('GET /test', async () => {
@@ -15,7 +15,7 @@ describe('createApp()', () => {
     })
   })
 
-  it('set no-cache headers for responses', async() => {
+  it('set no-cache headers for responses', async () => {
     const res = await request(app).get('/test')
     expect(res.headers['cache-control']).toContain('no-store')
   })

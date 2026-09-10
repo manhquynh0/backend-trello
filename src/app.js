@@ -22,7 +22,7 @@ export const createApp = () => {
   //test Api
   app.get('/test', (req, res) => {
     res.status(200).json({
-      message : 'TEST API'
+      message: 'TEST API'
     })
   })
   // route v1
@@ -31,4 +31,4 @@ export const createApp = () => {
   app.use(errorHandlingMiddleware)
   return app
 }
-export default createApp
+export default createApp()
