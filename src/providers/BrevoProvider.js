@@ -28,8 +28,7 @@ const sendEmail = async (user, customSubject, content) => {
     })
     return result
   } catch (error) {
-    console.error('Lỗi khi gửi email qua Brevo:', error?.message || error)
-    throw error
+    throw new Error(error?.message || 'Lỗi khi gửi email qua Brevo')
   }
 }
 

@@ -128,6 +128,8 @@ describe('User model', () => {
   describe('update', () => {
     it('should update user and return after update', async () => {
       // Arrange
+      jest.useFakeTimers()
+
       const userId = '69142686ac041cc814ddb945'
       const updateData = {
         displayName: 'newDisplayName',

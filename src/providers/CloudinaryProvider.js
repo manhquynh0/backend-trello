@@ -1,4 +1,3 @@
-require('dotenv').config()
 import cloudinary from 'cloudinary'
 import streamifier from 'streamifier'
 

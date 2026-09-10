@@ -7,13 +7,13 @@ export const CONNECT_REDIS = async () => {
   if (!redisClient) {
     redisClient = new Redis(process.env.REDIS_URL)
 
-    redisClient.on('connect', () => {
-      console.log('Connected to Redis Server successfully!')
-    })
+    // redisClient.on('connect', () => {
+    //   console.log('Connected to Redis Server successfully!')
+    // })
 
-    redisClient.on('error', (err) => {
-      console.error('Redis Client Error:', err)
-    })
+    // redisClient.on('error', (err) => {
+    //   console.error('Redis Client Error:', err)
+    // })
   }
 
   return redisClient
