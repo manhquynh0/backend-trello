@@ -63,7 +63,7 @@ export const verifyPermission = (requiredPermissions = []) => async (req, res, n
         userRoles.add(roles.MEMBER)
       }
     }
-    console.log(userRoles)
+
 
     // 3. Nếu User không giữ bất kỳ vai trò nào (không thuộc Board lẫn Card nào)
     if (userRoles.size === 0) {
