@@ -172,11 +172,31 @@ const update = async (userId, reqBody, userAvatarFile) => {
     throw error
   }
 }
-
+const forgotPassword = async (reqBody) => {
+  try {
+    const exitUser = await userModel.findOneByEmail(reqBody.email)
+    if (!exitUser) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Không tìm thấy tài khoản!')
+    }
+    const newPassword = `Qllo@2026${Math.floor(Math.random() * 1000)}`
+    const customSubject = 'QLLO - Forgot Password'
+    const html = `
+    Hello ${exitUser.userName},
+    <h3>Mật khẩu mới của bạn là: ${newPassword}</h3>
+    <p>Vui lòng đổi mật khẩu sau khi đăng nhập</p>`
+    await BrevoProvider.sendEmail(exitUser, customSubject, html)
+    await userModel.update(exitUser._id, {
+      password: bcryptjs.hashSync(newPassword, 8)
+    })
+  } catch (error) {
+    throw error
+  }
+}
 export const userService = {
   createNew,
   verify,
   login,
   refreshToken,
-  update
+  update,
+  forgotPassword
 }

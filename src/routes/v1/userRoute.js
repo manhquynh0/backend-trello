@@ -30,4 +30,6 @@ Router.route('/update')
     userValidation.update,
     userController.update
   )
+Router.route('/forgotPassword')
+  .put(authLimiter, userValidation.forgotPassword, userController.forgotPassword)
 export default Router
