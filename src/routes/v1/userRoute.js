@@ -12,12 +12,13 @@ const Router = express.Router()
 import {
   authMiddleware
 } from '~/middlewares/authMiddleware'
+import { authLimiter } from '~/middlewares/ratelimitingMiddleware'
 Router.route('/register')
-  .post(userValidation.createNew, userController.createNew)
+  .post(authLimiter, userValidation.createNew, userController.createNew)
 Router.route('/verify')
   .put(userValidation.verify, userController.verify)
 Router.route('/login')
-  .post(userValidation.login, userController.login)
+  .post(authLimiter, userValidation.login, userController.login)
 Router.route('/refresh_token')
   .post(userController.refreshToken)
 Router.route('/logout')

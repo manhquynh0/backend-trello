@@ -8,6 +8,7 @@ import {
   errorHandlingMiddleware
 } from '~/middlewares/errorHandlingMiddleware'
 import cookie from 'cookie-parser'
+import { apiLimiter } from '~/middlewares/ratelimitingMiddleware'
 export const createApp = () => {
   const app = express()
   app.use(cors(corsOptions))
@@ -25,8 +26,9 @@ export const createApp = () => {
       message: 'TEST API'
     })
   })
+  app.set('trust proxy', 1) // tin tưởng proxy đầu tiên (Nginx/Render/Vercel)
   // route v1
-  app.use('/v1', APIs_v1)
+  app.use('/v1', apiLimiter, APIs_v1)
 
   app.use(errorHandlingMiddleware)
   return app
