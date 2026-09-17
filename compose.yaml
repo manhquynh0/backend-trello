@@ -1,0 +1,47 @@
+services:
+  # 1. Backend API (Node.js)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trello_api
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - MONGODB_URI=mongodb://${MONGO_USERNAME:-root}:${MONGO_PASSWORD:-rootpassword}@db:27017/trello?authSource=admin
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+
+  # 2. Database MongoDB
+  db:
+    image: mongo:7.0
+    container_name: trello_mongodb
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-rootpassword}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # 3. Redis Caching
+  redis:
+    image: redis:7-alpine
+    container_name: trello_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mongo_data:
+  redis_data:
+
+
