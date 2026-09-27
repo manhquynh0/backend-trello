@@ -14,25 +14,16 @@ import {
 import { redisHelper } from '~/helpers/redisHelper'
 import { userModel } from '~/models/userModel'
 import { v4 as uuid } from 'uuid'
-import { DEFAULT_LABELS } from '~/utils/constants'
 import { ObjectId } from 'mongodb'
+import { labelModel } from '~/models/labelModel'
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
-    const newcard = {
-      ...reqBody,
-      labels: DEFAULT_LABELS.map(label => {
-        return {
-          ...label,
-          _id: new ObjectId().toString()
-        }
-      })
-
-    }
-    const createdcard = await cardModel.createNew(newcard)
+    const createdcard = await cardModel.createNew(reqBody)
 
     const getNewcard = await cardModel.findOneById(createdcard.insertedId)
     if (getNewcard) {
+      // await labelModel.createDefaultLabels(getNewcard._id)
       await columnModel.pushCardOrderIds(getNewcard)
       // Xóa cache Board trong Redis để khi F5 trang sẽ nạp lại Board có Card mới từ MongoDB
       if (reqBody.boardId) {
@@ -157,21 +148,6 @@ const createdAttachment = async (cardId, reqBody, userInfor) => {
     throw error
   }
 }
-const createdLabel = async (cardId, reqBody) => {
-  // eslint-disable-next-line no-useless-catch
-  try {
-    const label = {
-      ...reqBody,
-      _id: new ObjectId().toString()
-    }
-
-    const createdLabel = await cardModel.createdLabel(cardId, label)
-    await redisHelper.del(`card:${cardId}`)
-    return createdLabel
-  } catch (error) {
-    throw error
-  }
-}
 const archivedCard = async (cardId) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -185,33 +161,8 @@ const archivedCard = async (cardId) => {
     throw error
   }
 }
-const updateLabel = async (cardId, labelId, reqBody) => {
-  // eslint-disable-next-line no-useless-catch
-  try {
-    let data = {}
-    if (reqBody.name !== undefined) {
-      data.name = reqBody.name
-    }
-    if (reqBody.color !== undefined) {
-      data.color = reqBody.color
-    }
-    if (reqBody.isActive !== undefined) {
-      data.isActive = reqBody.isActive
-    }
-    const result = await cardModel.updateLabel(cardId, labelId, data)
-    if (!result) {
-      throw new ApiError(StatusCodes.NOT_FOUND, 'Label Not Found!')
-    }
-    await redisHelper.del(`card:${cardId}`)
-    return result
-  } catch (error) {
-    throw error
-  }
-}
-const getLabels = async (cardId, filterStage) => {
 
-  return await cardModel.getLabels(cardId, filterStage)
-}
+
 const createdChecklist = async (cardId, reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -252,9 +203,6 @@ export const cardService = {
   deleteAttachment,
   createdAttachment,
   archivedCard,
-  getLabels,
-  createdLabel,
-  updateLabel,
   createdChecklist,
   createdChecklistItem
 }

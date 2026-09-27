@@ -7,6 +7,13 @@ import { CloudinaryProvider } from '~/providers/CloudinaryProvider'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes } from 'http-status-codes'
 import { ObjectId } from 'mongodb'
+import { labelModel } from '~/models/labelModel'
+
+jest.mock('~/models/labelModel', () => ({
+  labelModel: {
+    createDefaultLabels: jest.fn()
+  }
+}))
 
 jest.mock('~/models/cardModel', () => ({
   cardModel: {
@@ -72,12 +79,8 @@ describe('cardService', () => {
 
       const result = await cardService.createNew({ title: 'Card 1', boardId: 'board1' })
 
-      expect(cardModel.createNew).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Card 1',
-          labels: expect.any(Array)
-        })
-      )
+      expect(cardModel.createNew).toHaveBeenCalledWith({ title: 'Card 1', boardId: 'board1' })
+      expect(labelModel.createDefaultLabels).toHaveBeenCalledWith(fakeCard._id)
       expect(columnModel.pushCardOrderIds).toHaveBeenCalledWith(fakeCard)
       expect(redisHelper.del).toHaveBeenCalledWith('board:board1')
       expect(result).toEqual(fakeCard)
@@ -203,39 +206,6 @@ describe('cardService', () => {
       expect(cardModel.unshiftAttachment).toHaveBeenCalled()
       expect(redisHelper.del).toHaveBeenCalledWith(`card:${cardId}`)
       expect(result).toEqual({ success: true })
-    })
-  })
-
-  describe('labels', () => {
-    it('createdLabel should create label with ObjectId and clear cache', async () => {
-      cardModel.createdLabel.mockResolvedValue({ success: true })
-      const result = await cardService.createdLabel(cardId, { name: 'Bug', color: '#ff0000' })
-
-      expect(cardModel.createdLabel).toHaveBeenCalledWith(cardId, expect.objectContaining({ name: 'Bug', _id: expect.any(String) }))
-      expect(redisHelper.del).toHaveBeenCalledWith(`card:${cardId}`)
-      expect(result).toEqual({ success: true })
-    })
-
-    it('updateLabel should update label fields and clear cache', async () => {
-      cardModel.updateLabel.mockResolvedValue({ success: true })
-      const result = await cardService.updateLabel(cardId, 'l1', { name: 'New Name', color: '#00ff00', isActive: true })
-
-      expect(cardModel.updateLabel).toHaveBeenCalledWith(cardId, 'l1', { name: 'New Name', color: '#00ff00', isActive: true })
-      expect(redisHelper.del).toHaveBeenCalledWith(`card:${cardId}`)
-      expect(result).toEqual({ success: true })
-    })
-
-    it('updateLabel should throw 404 if label not found', async () => {
-      cardModel.updateLabel.mockResolvedValue(null)
-      await expect(cardService.updateLabel(cardId, 'l1', { name: 'New' })).rejects.toMatchObject({
-        statusCode: StatusCodes.NOT_FOUND
-      })
-    })
-
-    it('getLabels should return labels from model', async () => {
-      cardModel.getLabels.mockResolvedValue([{ name: 'Bug' }])
-      const result = await cardService.getLabels(cardId, {})
-      expect(result).toEqual([{ name: 'Bug' }])
     })
   })
 

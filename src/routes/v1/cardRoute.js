@@ -5,6 +5,8 @@ import {
 import {
   cardController
 } from '~/controllers/cardController'
+import { labelController } from '~/controllers/labelController'
+import { labelValidations } from '~/validations/labelValidations'
 import {
   authMiddleware
 } from '~/middlewares/authMiddleware'
@@ -29,11 +31,11 @@ Router.route('/:id/attachments')
 Router.route('/:cardId/attachments/:publicId(*)')
   .delete(authMiddleware.isAuthorized, cardController.deleteAttachment)
 Router.route('/:id/labels')
-  .get(authMiddleware.isAuthorized, cardController.getLabels)
-  .post(authMiddleware.isAuthorized, cardValidations.createdLabel, cardController.createdLabel)
-// .delete(authMiddleware.isAuthorized, cardController.deletedLabel)
+  .get(authMiddleware.isAuthorized, labelController.getLabels)
+  .post(authMiddleware.isAuthorized, labelValidations.createNew, labelController.createNew)
 Router.route('/:id/labels/:labelId')
-  .put(authMiddleware.isAuthorized, cardValidations.updateLabel, cardController.updateLabel)
+  .put(authMiddleware.isAuthorized, labelValidations.updateLabel, labelController.updateLabel)
+  .delete(authMiddleware.isAuthorized, labelController.deleteLabel)
 Router.route('/:id/checklist')
   .post(authMiddleware.isAuthorized, cardValidations.createdChecklist, cardController.createdChecklist)
 Router.route('/:id/checklist/:checklistId')

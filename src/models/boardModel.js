@@ -18,6 +18,9 @@ import {
   userModel
 } from './userModel'
 import {
+  labelModel
+} from './labelModel'
+import {
   pagingSkipValue
 } from '~/utils/algorithms'
 const INVALID_UPDATE_FIELDS = ['_id', 'createdAt']
@@ -139,6 +142,30 @@ const getDetails = async (userId, boardId) => {
             {
               $match: {
                 _destroy: false
+              }
+            },
+            {
+              $lookup: {
+                from: labelModel.LABEL_COLLECTION_NAME,
+                localField: '_id',
+                foreignField: 'cardId',
+                as: 'labels',
+                pipeline: [
+                  {
+                    $match: {
+                      _destroy: false
+                    }
+                  },
+                  {
+                    $project: {
+                      _id: 1,
+                      name: 1,
+                      color: 1,
+                      isActive: 1,
+                      cardId: 1
+                    }
+                  }
+                ]
               }
             }
           ]

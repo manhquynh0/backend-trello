@@ -179,18 +179,6 @@ describe('cardModel', () => {
       expect(res).toBeDefined()
     })
 
-    it('should push label on createdLabel', async () => {
-      mockFindOneAndUpdate.mockResolvedValue({ _id: cardId })
-
-      await cardModel.createdLabel(cardId, { name: 'Bug', color: '#ff0000' })
-
-      expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
-        { _id: new ObjectId(cardId) },
-        { $push: { labels: expect.objectContaining({ name: 'Bug', color: '#ff0000', _id: expect.any(ObjectId) }) } },
-        { returnDocument: 'after' }
-      )
-    })
-
     it('should push checklist and checklistItem', async () => {
       const checklistId = new ObjectId().toString()
       mockFindOneAndUpdate.mockResolvedValue({ _id: cardId })

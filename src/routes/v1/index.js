@@ -16,4 +16,5 @@ Router.use('/cards', cardRoute)
 Router.use('/columns', columnRoute)
 Router.use('/users', userRoute)
 Router.use('/invitations', invitationRoute)
+
 export default Router

@@ -63,44 +63,6 @@ const archivedCard = async (req, res, next) => {
     next(error)
   }
 }
-const getLabels = async (req, res, next) => {
-  try {
-    const cardId = req.params.id
-    const filterStage = req.query
-    const labels = await cardService.getLabels(cardId, filterStage)
-    res.status(StatusCodes.OK).json(labels)
-  } catch (error) {
-    next(error)
-  }
-}
-const createdLabel = async (req, res, next) => {
-  try {
-    const cardId = req.params.id
-    const updated = await cardService.createdLabel(cardId, req.body)
-    res.status(StatusCodes.CREATED).json(updated)
-  } catch (error) {
-    next(error)
-  }
-}
-const deleteLabel = async (req, res, next) => {
-  try {
-    const cardId = req.params.id
-    const updatedCard = await cardService.deletedLabel(cardId)
-    res.status(StatusCodes.OK).json(updatedCard)
-  } catch (error) {
-    next(error)
-  }
-}
-const updateLabel = async (req, res, next) => {
-  try {
-    const cardId = req.params.id
-    const labelId = req.params.labelId
-    const updatedCard = await cardService.updateLabel(cardId, labelId, req.body)
-    res.status(StatusCodes.OK).json(updatedCard)
-  } catch (error) {
-    next(error)
-  }
-}
 const createdChecklist = async (req, res, next) => {
   try {
     const cardId = req.params.id
@@ -127,10 +89,6 @@ export const cardController = {
   deleteAttachment,
   createdAttachment,
   archivedCard,
-  getLabels,
-  createdLabel,
-  deleteLabel,
-  updateLabel,
   createdChecklist,
   createdChecklistItem
 }

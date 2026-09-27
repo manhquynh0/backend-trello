@@ -15,6 +15,7 @@ import {
 
 } from '~/utils/validators'
 import { userModel } from './userModel'
+import { labelModel } from './labelModel'
 // Define Collection (name & schema)
 const CARD_COLLECTION_NAME = 'cards'
 const INVALID_UPDATE_FIELDS = ['_id', 'boardId', 'createdAt']
@@ -36,17 +37,11 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
     userAvatar: Joi.string(),
     userDisplayName: Joi.string().required().min(3).max(50).trim().strict()
   }).default([]),
-  labels: Joi.array().items({
-    _id: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
-    name: Joi.string().required().min(3).max(50).trim().strict(),
-    color: Joi.string().required(),
-    isActive: Joi.boolean().default(false)
-  }).default([]),
   checkList: Joi.array().items({
     _id: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
     name: Joi.string().required().min(3).max(50).trim().strict(),
     isSuccess: Joi.boolean().default(false),
-    subItems : Joi.array().items({
+    subItems: Joi.array().items({
       _id: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
       name: Joi.string().required().min(3).max(50).trim().strict(),
       isSuccess: Joi.boolean().default(false)
@@ -73,8 +68,8 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
     commentedAt: Joi.date().timestamp()
   }).default([]),
   description: Joi.string().optional(),
-  startDate :Joi.date().timestamp('javascript').default(null),
-  dueDate :Joi.date().timestamp('javascript').default(null),
+  startDate: Joi.date().timestamp('javascript').default(null),
+  dueDate: Joi.date().timestamp('javascript').default(null),
   createdAt: Joi.date().timestamp('javascript').default(Date.now),
   updatedAt: Joi.date().timestamp('javascript').default(null),
   _destroy: Joi.boolean().default(false)
@@ -90,13 +85,7 @@ const createNew = async (data) => {
     const newAddCard = {
       ...validatedData,
       columnId: new ObjectId(validatedData.columnId),
-      boardId: new ObjectId(validatedData.boardId),
-      labels: validatedData.labels.map(label => {
-        return {
-          ...label,
-          _id: new ObjectId()
-        }
-      })
+      boardId: new ObjectId(validatedData.boardId)
     }
     const createdcard = await GET_DB().collection(CARD_COLLECTION_NAME).insertOne(newAddCard)
     return createdcard
@@ -208,6 +197,18 @@ const getDetails = async (cardId) => {
       },
       {
         $lookup: {
+          from: labelModel.LABEL_COLLECTION_NAME,
+          localField: '_id',
+          foreignField: 'cardId',
+          as: 'labels',
+          pipeline: [
+            { $match: { _destroy: false } },
+            { $project: { _id: 1, name: 1, color: 1, isActive: 1, cardId: 1 } }
+          ]
+        }
+      },
+      {
+        $lookup: {
           from: userModel.USER_COLLECTION_NAME,
           localField: 'memberIds',
           foreignField: '_id',
@@ -252,86 +253,7 @@ const archivedCard = async (cardId) => {
   }
 }
 
-const createdLabel = async (cardId, labelData) => {
-  try {
-    const data = {
-      ...labelData,
-      _id: new ObjectId()
-    }
-    // Thêm label vào cuối mảng labels
-    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
-      { _id: new ObjectId(cardId) },
-      { $push: { labels: data } },
-      { returnDocument: 'after' }
-    )
-    return result || null
-  } catch (error) {
-    throw new Error(error)
-  }
-}
 
-const updateLabel = async (cardId, labelId, data) => {
-  try {
-    const updateData = {}
-
-    if (data.name !== undefined) {
-      updateData['labels.$.name'] = data.name
-    }
-
-    if (data.color !== undefined) {
-      updateData['labels.$.color'] = data.color
-    }
-
-    if (data.isActive !== undefined) {
-      updateData['labels.$.isActive'] = data.isActive
-    }
-
-    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
-      {
-        _id: new ObjectId(cardId),
-        'labels._id': new ObjectId(labelId)
-      },
-      {
-        $set: updateData
-      },
-      { returnDocument: 'after' }
-    )
-    return result || null
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-const getLabels = async (cardId, filterStage) => {
-  try {
-    // Bước 1: Lấy tên cần lọc ra từ filterStage (nếu có)
-    const filterName = filterStage?.name || filterStage?.['q[name]'] || filterStage?.q?.name
-
-    // Bước 2: Tìm card theo id, chỉ lấy field "labels" cho nhẹ
-    const card = await GET_DB()
-      .collection(CARD_COLLECTION_NAME)
-      .findOne(
-        { _id: new ObjectId(cardId) },
-        { $project: { labels: 1 } }
-      )
-
-    // Bước 3: Nếu không tìm thấy card, trả về mảng rỗng
-    const allLabels = card?.labels || []
-
-    // Bước 4: Nếu không có filterName thì trả về hết luôn
-    if (!filterName) {
-      return { labels: allLabels }
-    }
-
-    // Bước 5: Lọc bằng JavaScript thuần, không phân biệt hoa/thường
-    const filteredLabels = allLabels.filter(label =>
-      label?.name?.toLowerCase().includes(filterName.toLowerCase())
-    )
-
-    return { labels: filteredLabels }
-  } catch (error) {
-    throw new Error(error)
-  }
-}
 const createdChecklist = async (cardId, checklistData) => {
   try {
     const data = {
@@ -382,9 +304,6 @@ export const cardModel = {
   getDetails,
   deleteAttachment,
   archivedCard,
-  createdLabel,
-  updateLabel,
-  getLabels,
   createdChecklist,
   createdChecklistItem
 }

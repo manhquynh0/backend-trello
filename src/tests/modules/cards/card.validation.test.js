@@ -113,58 +113,6 @@ describe('cardValidations', () => {
     })
   })
 
-  describe('createdLabel and updateLabel', () => {
-    it('should validate createdLabel successfully', async () => {
-      const req = mockRequest({
-        body: {
-          labels: [{ name: 'Bug Fix', color: '#ff0000' }]
-        }
-      })
-
-      await cardValidations.createdLabel(req, res, next)
-
-      expect(next).toHaveBeenCalledWith()
-    })
-
-    it('should fail createdLabel when missing color', async () => {
-      const req = mockRequest({
-        body: {
-          labels: [{ name: 'Bug Fix' }]
-        }
-      })
-
-      await cardValidations.createdLabel(req, res, next)
-
-      expect(next).toHaveBeenCalledTimes(1)
-      const error = next.mock.calls[0][0]
-      expect(error).toBeInstanceOf(ApiError)
-      expect(error.statusCode).toBe(StatusCodes.UNPROCESSABLE_ENTITY)
-    })
-
-    it('should validate updateLabel successfully', async () => {
-      const req = mockRequest({
-        body: { name: 'Urgent Bug', color: '#cc0000' }
-      })
-
-      await cardValidations.updateLabel(req, res, next)
-
-      expect(next).toHaveBeenCalledWith()
-    })
-
-    it('should fail updateLabel if title is invalid', async () => {
-      const req = mockRequest({
-        body: { name: 'x' }
-      })
-
-      await cardValidations.updateLabel(req, res, next)
-
-      expect(next).toHaveBeenCalledTimes(1)
-      const error = next.mock.calls[0][0]
-      expect(error).toBeInstanceOf(ApiError)
-      expect(error.statusCode).toBe(StatusCodes.UNPROCESSABLE_ENTITY)
-    })
-  })
-
   describe('checklists and checklist items', () => {
     it('should validate createdChecklist successfully', async () => {
       const req = mockRequest({ body: { name: 'Frontend Checklist' } })

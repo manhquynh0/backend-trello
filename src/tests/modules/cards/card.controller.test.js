@@ -11,10 +11,6 @@ jest.mock('~/services/cardService', () => ({
     deleteAttachment: jest.fn(),
     createdAttachment: jest.fn(),
     archivedCard: jest.fn(),
-    getLabels: jest.fn(),
-    createdLabel: jest.fn(),
-    deletedLabel: jest.fn(),
-    updateLabel: jest.fn(),
     createdChecklist: jest.fn(),
     createdChecklistItem: jest.fn()
   }
@@ -163,50 +159,7 @@ describe('cardController', () => {
     })
   })
 
-  describe('labels and checklists', () => {
-    it('should getLabels and return 200', async () => {
-      cardService.getLabels.mockResolvedValue([])
-      req.params = { id: 'c1' }
-      req.query = { q: 'bug' }
-
-      await cardController.getLabels(req, res, next)
-
-      expect(cardService.getLabels).toHaveBeenCalledWith('c1', req.query)
-      expect(res.status).toHaveBeenCalledWith(StatusCodes.OK)
-    })
-
-    it('should createdLabel and return 201', async () => {
-      cardService.createdLabel.mockResolvedValue({ success: true })
-      req.params = { id: 'c1' }
-      req.body = { name: 'Bug' }
-
-      await cardController.createdLabel(req, res, next)
-
-      expect(cardService.createdLabel).toHaveBeenCalledWith('c1', req.body)
-      expect(res.status).toHaveBeenCalledWith(StatusCodes.CREATED)
-    })
-
-    it('should deleteLabel and return 200', async () => {
-      cardService.deletedLabel.mockResolvedValue({ success: true })
-      req.params = { id: 'c1' }
-
-      await cardController.deleteLabel(req, res, next)
-
-      expect(cardService.deletedLabel).toHaveBeenCalledWith('c1')
-      expect(res.status).toHaveBeenCalledWith(StatusCodes.OK)
-    })
-
-    it('should updateLabel and return 200', async () => {
-      cardService.updateLabel.mockResolvedValue({ success: true })
-      req.params = { id: 'c1', labelId: 'l1' }
-      req.body = { name: 'New Label' }
-
-      await cardController.updateLabel(req, res, next)
-
-      expect(cardService.updateLabel).toHaveBeenCalledWith('c1', 'l1', req.body)
-      expect(res.status).toHaveBeenCalledWith(StatusCodes.OK)
-    })
-
+  describe('checklists', () => {
     it('should createdChecklist and return 201', async () => {
       cardService.createdChecklist.mockResolvedValue({ success: true })
       req.params = { id: 'c1' }
@@ -229,25 +182,13 @@ describe('cardController', () => {
       expect(res.status).toHaveBeenCalledWith(StatusCodes.CREATED)
     })
 
-    it('should forward error to next for labels and checklists failures', async () => {
-      cardService.getLabels.mockRejectedValue(new Error('err'))
-      await cardController.getLabels(req, res, next)
-      expect(next).toHaveBeenCalled()
-
-      cardService.createdLabel.mockRejectedValue(new Error('err'))
-      await cardController.createdLabel(req, res, next)
-      expect(next).toHaveBeenCalled()
-
-      cardService.deletedLabel.mockRejectedValue(new Error('err'))
-      await cardController.deleteLabel(req, res, next)
-      expect(next).toHaveBeenCalled()
-
-      cardService.updateLabel.mockRejectedValue(new Error('err'))
-      await cardController.updateLabel(req, res, next)
-      expect(next).toHaveBeenCalled()
-
+    it('should forward error to next for checklists failures', async () => {
       cardService.createdChecklist.mockRejectedValue(new Error('err'))
       await cardController.createdChecklist(req, res, next)
+      expect(next).toHaveBeenCalled()
+
+      cardService.createdChecklistItem.mockRejectedValue(new Error('err'))
+      await cardController.createdChecklistItem(req, res, next)
       expect(next).toHaveBeenCalled()
 
       cardService.createdChecklistItem.mockRejectedValue(new Error('err'))
