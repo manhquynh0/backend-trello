@@ -13,12 +13,7 @@ import {
 import {
   pickUser
 } from '~/utils/formatter'
-import {
-  WEBSITE_DOMAIN
-} from '~/utils/constants'
-import {
-  BrevoProvider
-} from '~/providers/BrevoProvider'
+import { emailService } from '~/services/emailService'
 import {
   JwtProvider
 } from '~/providers/JwtProvider'
@@ -43,21 +38,7 @@ const createNew = async (reqBody) => {
     }
     const createdUser = await userModel.createNew(newUser)
     const getNewUser = await userModel.findOneById(createdUser.insertedId)
-    const verificationLink = `${WEBSITE_DOMAIN}/account/verification?email=${getNewUser.email}&token=${getNewUser.verifyToken}`
-    const customSubject = 'ManhQuynhDev'
-    const html = `
-    Hello ${getNewUser.userName},
-
-Thank you for creating your QLLO account.
-
-Please click the button below to verify your email address.
-
-This link will expire in 30 minutes.
-
-Best regards,
-ManhQuynhDev 
-    <h3>${verificationLink}</h3>`
-    await BrevoProvider.sendEmail(getNewUser, customSubject, html)
+    await emailService.sendVerificationEmail(getNewUser)
     return pickUser(getNewUser)
   } catch (error) {
     throw error
@@ -179,12 +160,7 @@ const forgotPassword = async (reqBody) => {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Không tìm thấy tài khoản!')
     }
     const newPassword = `Qllo@2026${Math.floor(Math.random() * 1000)}`
-    const customSubject = 'QLLO - Forgot Password'
-    const html = `
-    Hello ${exitUser.userName},
-    <h3>Mật khẩu mới của bạn là: ${newPassword}</h3>
-    <p>Vui lòng đổi mật khẩu sau khi đăng nhập</p>`
-    await BrevoProvider.sendEmail(exitUser, customSubject, html)
+    await emailService.sendForgotPasswordEmail(exitUser, newPassword)
     await userModel.update(exitUser._id, {
       password: bcryptjs.hashSync(newPassword, 8)
     })
