@@ -25,8 +25,21 @@ const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
   try {
     const exitUser = await userModel.findOneByEmail(reqBody.email)
-    if (exitUser) {
-      throw new ApiError(StatusCodes.CONFLICT, 'Email đã tồn tại !')
+    if (exitUser && exitUser.isActive) {
+      throw new ApiError(StatusCodes.CONFLICT, 'Email đã tồn tại và được kích hoạt !')
+    }
+    // Trường hợp 2: Tài khoản đã đăng ký nhưng CHƯA kích hoạt -> Cập nhật lại và gửi lại email
+    if (exitUser && !exitUser.isActive) {
+      const newVerifyToken = uuidv4()
+      const updateData = {
+        password: bcryptjs.hashSync(reqBody.password, 8),
+        verifyToken: newVerifyToken
+      }
+
+      const updatedUser = await userModel.update(exitUser._id, updateData)
+      await emailService.sendVerificationEmail({ ...exitUser, verifyToken: newVerifyToken })
+
+      return pickUser(updatedUser)
     }
     const nameFromEmail = reqBody.email.split('@')[0]
     const newUser = {

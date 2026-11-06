@@ -150,7 +150,7 @@ const movingCard = async (reqBody) => {
     // Xóa dữ liệu cacheBoard cũ
     await redisHelper.del(keyBoard)
     // Xử lý debounce
-    // Nếu trong vòng 2s có hành động kéo thả mới thì xóa hẹn giờ cũ ( set về 0)
+    // Nếu trong vòng 0.5s có hành động kéo thả mới thì xóa hẹn giờ cũ ( set về 0)
     if (dragTimers.has(boardId)) {
       clearTimeout(dragTimers.get(boardId))
     }
